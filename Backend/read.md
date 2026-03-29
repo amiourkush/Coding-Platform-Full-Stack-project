@@ -1,0 +1,1 @@
+const url = mongodb+srv://amiourkush41:amiourkush41@leetcode.gp2ub01.mongodb.net/Leetcode
