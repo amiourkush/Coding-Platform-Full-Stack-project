@@ -1,6 +1,10 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod'; 
+import { useDispatch,useSelector } from 'react-redux';
+import { useNavigate } from 'react-router';
+import { loginUser } from '../authSlice';
+import { useEffect } from 'react';
 
 const signupSchema = z.object({
     
@@ -9,13 +13,22 @@ const signupSchema = z.object({
 })
 
 function Loginpage(){
+  const dispatch=useDispatch();
+   const navigate =useNavigate();
+
+   const {isAuthenticated} = useSelector((state)=>state.auth);
   const { register, handleSubmit, formState: { errors },} = useForm({resolver:zodResolver(signupSchema),
    mode: "onChange",         
  
   });
+  useEffect(()=>{
+    if(isAuthenticated){
+      navigate('/');
+    }
+  },[isAuthenticated])
    
   const submittedData = async(data)=>{
-    console.log(data);
+    dispatch(loginUser(data));
   }
 
   
@@ -66,6 +79,7 @@ function Loginpage(){
             </div>
 
             <button className="btn btn-primary w-full">Login</button>
+            <div className='text-center m-1.5'>Don't have account.<a href='/signup' className='text-blue-700'>Signup</a></div>
           </form>
         </div>
       </div>

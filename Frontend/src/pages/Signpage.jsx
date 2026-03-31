@@ -1,6 +1,10 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod'; 
+import { useDispatch,useSelector } from 'react-redux';
+import { useNavigate } from 'react-router';
+import {check, registerUser} from "../authSlice";
+import { useEffect } from 'react';
 
 const signupSchema = z.object({
     firstName : z.string().min(3,"Length should be atleast 3 char"),
@@ -9,13 +13,24 @@ const signupSchema = z.object({
 })
 
 function Signpage(){
+
+   const dispatch=useDispatch();
+   const navigate =useNavigate();
+
+   const {isAuthenticated} = useSelector((state)=>state.auth);
+
   const { register, handleSubmit, formState: { errors },} = useForm({resolver:zodResolver(signupSchema),
    mode: "onChange",         
  
   });
-   
-  const submittedData = async(data)=>{
-    console.log(data);
+  useEffect(()=>{
+    if(isAuthenticated){
+      navigate('/');
+    }
+  },[isAuthenticated])
+  
+    const submittedData = async(data)=>{
+    dispatch(registerUser(data));
   }
 
   
@@ -23,7 +38,7 @@ function Signpage(){
      <div className="min-h-screen flex items-center justify-center bg-base-200">
       <div className="card w-full max-w-sm shadow-2xl bg-base-100">
         <div className="card-body">
-          <h2 className="text-2xl font-bold text-center">Signup</h2>
+          <h2 className="text-2xl font-bold text-center">LEETCODE</h2>
 
           <form onSubmit={handleSubmit(submittedData)}>
             {/* First Name */}
@@ -82,6 +97,7 @@ function Signpage(){
             </div>
 
             <button className="btn btn-primary w-full">Sign Up</button>
+            <div className='text-center m-1.5'>Already have an account.<a href="/login" className='text-blue-700'>Login</a></div>
           </form>
         </div>
       </div>
