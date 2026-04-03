@@ -13,15 +13,15 @@ function App(){
    const dispatch = useDispatch();
    useEffect(()=>{
     dispatch(check());
-   },[]);                                     // it will render only once
+   },[dispatch]);                                     // it will render only once
 
     return(
         <>
         <Routes>
-             <Route path="/" element={<Homepage/>}></Route>
-            {/* <Route path="/" element={isAuthenticated ?<Homepage/>:<Navigate to="/signup" />}></Route>
+             {/* <Route path="/" element={<Homepage/>}></Route> */}
+            <Route path="/" element={isAuthenticated ?<Homepage/>:<Navigate to="/signup" />}></Route>
             <Route path="/login" element={isAuthenticated ?<Navigate to="/" />:<Loginpage/>}></Route>
-            <Route path="/signup" element={isAuthenticated ? <Navigate to="/" />:<Signpage/>}></Route> */}
+            <Route path="/signup" element={isAuthenticated ? <Navigate to="/" />:<Signpage/>}></Route>
 
         </Routes>
         </>

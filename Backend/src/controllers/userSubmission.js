@@ -1,6 +1,6 @@
 const problem = require("../models/problem");
 const submission = require("../models/submission");
-const problem = require("../models/problem")
+const Problem = require("../models/problem")
 const {getlanguagebyId,submitBatch,submitToken} = require("../utils/problemUtility");
 
 const submitCode =async(req,res)=>{
@@ -16,7 +16,7 @@ const submitCode =async(req,res)=>{
         }
 
         //fetch the problem from db
-        const problem = await problem.findById(problemId);
+        const problem = await Problem.findById(problemId);
         
 
         //storing sumbitted code, before Sending to judge0
@@ -100,7 +100,7 @@ const runCode = async(req,res)=>{
         }
 
         //fetch the problem from db
-        const problem = await problem.findById(problemId);
+        const problem = await Problem.findById(problemId);
         
 
         

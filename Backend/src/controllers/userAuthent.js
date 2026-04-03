@@ -12,7 +12,7 @@ const register = async(req,res)=>{
         validate(req.body);
          const {firstName,emailId,password} = req.body;
 
-         console.log(req.body)
+         console.log(req.body);
 
          req.body.password= await bcrypt.hash(password,10);
          const user= await User.create(req.body);
@@ -23,7 +23,8 @@ const register = async(req,res)=>{
         emailId : req.result.emailId,
         _id : req.result._id
     }
-          res.cookie("token",token,{maxAge:60*60*1000});
+        res.cookie("token",token,{maxAge:60*60*1000});
+      //  res.status(200).send("Successfully Registered");
         res.status(201).json({
         user : reply,
         message : "Registered Successfully"
@@ -107,7 +108,7 @@ const adminRegister = async(req,res)=>{
 
     }
     catch(err){
-        console.log(err);
+        res.status(500).send(err);
     }
 }
 
@@ -125,4 +126,4 @@ const deleteProfile = async(req,res)=>{
 
 
 
-module.exports={register,login,logout,adminRegister};
+module.exports={register,login,logout,adminRegister,deleteProfile};
