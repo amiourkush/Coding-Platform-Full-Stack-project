@@ -5,7 +5,7 @@ const validate = (data)=>{
     const mandatoryField = ["firstName","emailId","password"];
 
     const isAllowed = mandatoryField.every((k)=>Object.keys(data).includes(k));
-    // console.log(isAllowed);
+     console.log(isAllowed);
 
     if(!isAllowed){
      
@@ -18,10 +18,10 @@ const validate = (data)=>{
         throw new Error("Invalid email");
     }
 
-    if(!validator.isStrongPassword(data.password)){
+    // if(!validator.isStrongPassword(data.password)){
          
-        throw new Error("Invalid password");
-    }
+    //     throw new Error("Invalid password");
+    // }
 }
 
 module.exports = validate;

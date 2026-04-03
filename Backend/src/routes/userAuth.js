@@ -16,7 +16,7 @@ authRouter.get("/check",tokenMw,(req,res)=>{
         emailId : req.result.emailId,
         _id : req.result._id
     }
-    res.status(201).json({
+    res.status(200).json({
         user : reply,
         message : "Valid User"
     })

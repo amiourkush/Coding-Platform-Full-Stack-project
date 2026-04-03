@@ -15,24 +15,29 @@ const register = async(req,res)=>{
          console.log(req.body);
 
          req.body.password= await bcrypt.hash(password,10);
+         req.body.role="user";
          const user= await User.create(req.body);
-         req.body.role ="user"
+        //  req.body.role ="user"
          const token = jwt.sign({_id :user._id,emailId:emailId,role:"user"},process.env.JWT_KEY,{expiresIn : 60*60})
           const reply ={
-        firstName : req.result.firstName,
-        emailId : req.result.emailId,
-        _id : req.result._id
+        firstName : user.firstName,
+        emailId : user.emailId,
+        _id : user._id
     }
         res.cookie("token",token,{maxAge:60*60*1000});
       //  res.status(200).send("Successfully Registered");
-        res.status(201).json({
+        res.status(200).json({
         user : reply,
         message : "Registered Successfully"
     });
 
     }
     catch(err){
-         res.status(400).send("ERROR :"+err);
+          console.log("FULL ERROR 👉", err);   
+    res.status(400).json({
+        message: err.message,
+        error: err
+    });
     }
 }
 

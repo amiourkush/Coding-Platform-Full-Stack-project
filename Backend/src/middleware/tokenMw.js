@@ -8,28 +8,31 @@ const tokenMw = async(req,res,next)=>{
     try{
         const {token} = req.cookies;
         if(!token){
-           throw new Error("Token is not present");
+           return res.status(401).json({ message: "Token missing" });
         }
         const payload = jwt.verify(token,process.env.JWT_KEY)
         const {_id} = payload;
         if(!_id){
-            throw new Error("Invalid Token");
+           return res.status(401).json({ message: "Id is missing" });
 
         }
         const result = await User.findById(_id);
         if(!result){
-            throw new Error("User doesnt exist");
+            return res.status(401).json({ message: "User dont exist" });
 
         }
         const isBlocked = await redisClient.exists(`token :${token}`);
         if(isBlocked){
-            throw new Error("Invalid token")
+            return res.status(401).json({ message: "Token missing" });
         }
         req.result= result;
         next();
     }
     catch(err){
-        console.log(err);
+         console.log(err.message);
+    return res.status(401).json({
+        message: err.message || "Unauthorized"
+    });
     }
 }
 
