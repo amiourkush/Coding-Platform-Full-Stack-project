@@ -27,7 +27,7 @@ function Signpage(){
     if(isAuthenticated){
       navigate('/');
     }
-  },[isAuthenticated])
+  },[isAuthenticated,navigate])
   
     const submittedData = async(data)=>{
     await dispatch(registerUser(data));
@@ -70,9 +70,9 @@ function Signpage(){
                 className="input input-bordered"
                 {...register("emailId")}
               />
-              {errors.email && (
+              {errors.emailId && (
                 <span className="text-red-500 text-sm mt-1">
-                  {errors.email.message}
+                  {errors.emailId.message}
                 </span>
               )}
             </div>
@@ -86,8 +86,7 @@ function Signpage(){
                 type="password"
                 placeholder="Enter password"
                 className="input input-bordered"
-                {...register("password"
-                )}
+                {...register("password")}
               />
               {errors.password && (
                 <span className="text-red-500 text-sm mt-1">

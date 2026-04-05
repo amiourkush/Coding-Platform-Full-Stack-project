@@ -1,4 +1,4 @@
-import {createSlice,createAsyncThunk, isRejectedWithValue} from "@reduxjs/toolkit"
+import {createSlice,createAsyncThunk} from "@reduxjs/toolkit"
 import axiosClient from "./utils/axiosClient";
 
 export const registerUser = createAsyncThunk("auth/register",async(userData,{rejectWithValue})=>{
@@ -26,9 +26,9 @@ export const check = createAsyncThunk(
     "auth/check",
     async(_,{rejectWithValue})=>{
         try{
-            const response = await axiosClient.get("/user/check");
-            console.log(response.data.user);
-            return response.data.user;
+            const {data} = await axiosClient.get("/user/check");
+            //console.log(response.data.user);
+            return data.user;
         }catch(error){
             return rejectWithValue(error.message);
         }
@@ -62,15 +62,15 @@ const authSlice = createSlice({
             state.loading=true;
             state.error=null;
         })
-        .addCase(registerUser.fulfilled,(state,actions)=>{
+        .addCase(registerUser.fulfilled,(state,action)=>{
             state.loading = false;
-            state.isAuthenticated=!!actions.payload;
-            state.user = actions.payload;
+            state.isAuthenticated=!!action.payload;
+            state.user = action.payload;
 
         })
-        .addCase(registerUser.rejected,(state,actions)=>{
+        .addCase(registerUser.rejected,(state,action)=>{
             state.loading = false;
-            state.error = actions.payload?.message || "something went wrong";
+            state.error = action.payload?.message || "something went wrong";
             state.isAuthenticated = false;
             state.user = null;
         })

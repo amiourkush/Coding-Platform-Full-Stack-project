@@ -33,6 +33,7 @@ const adminMw = async(req,res,next)=>{
     }
     catch(err){
         console.log(err);
+        res.send("Error : "+err);
     }
 }
 

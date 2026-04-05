@@ -1,13 +1,24 @@
 import { useDispatch,useSelector } from "react-redux";
 import { useState } from "react";
+import { logout } from "../authSlice";
 
 function Homepage(){
 
     const {user} = useSelector((state)=>state.auth);
-    const [status,setStatus] = useState("");
-    const [difficulty,setDifficulty]=useState("");
-    const [tags,setTags]=useState("");
+    const dispatch =useDispatch();
+    const [probelm,setProblem] = useState([]);
+    const [solvedProblem,setSolvedProblem] =useState([]);
+    const [filter,setFilter] = useState({
+      difficulty:"all",
+      tags:"all",
+      status:"all"
+    })
     const [dropOption,setDropOption]=useState(false);
+
+    const handlelogout =async()=>{
+      await dispatch(logout());
+
+    }
     return(
        <>
        <div className="h-screen bg-[#0f0f0f] text-gray-200 flex flex-col">
@@ -26,7 +37,7 @@ function Homepage(){
 
       {dropOption && (
         <div className="absolute right-0 mt-2 w-32 bg-[#1f1f1f] border border-gray-700 rounded-lg shadow-lg">
-          <div className="px-4 py-2 hover:bg-gray-800 cursor-pointer">
+          <div className="px-4 py-2 hover:bg-gray-800 cursor-pointer" onClick={handlelogout}>
             Logout
           </div>
         </div>
@@ -38,8 +49,8 @@ function Homepage(){
   <div className="flex justify-center gap-10 py-4 bg-[#141414] border-b border-gray-800">
 
     <select
-      value={status}
-      onChange={(e) => setStatus(e.target.value)}
+      value={filter.status}
+      onChange={(e) => setFilter({...filter,status:e.target.value})}
       className="bg-[#1f1f1f] px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
     >
       <option value="allproblem">All Problems</option>
@@ -47,8 +58,8 @@ function Homepage(){
     </select>
 
     <select
-      value={difficulty}
-      onChange={(e) => setDifficulty(e.target.value)}
+      value={filter.difficulty}
+      onChange={(e) => setFilter({...filter,difficulty:e.target.value})}
       className="bg-[#1f1f1f] px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
     >
       <option value="Easy">Easy</option>
@@ -57,8 +68,8 @@ function Homepage(){
     </select>
 
     <select
-      value={tags}
-      onChange={(e) => setTags(e.target.value)}
+      value={filter.tags}
+      onChange={(e) => setFilter({...filter,tags:e.target.value})}
       className="bg-[#1f1f1f] px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
     >
       <option value="Array">Array</option>

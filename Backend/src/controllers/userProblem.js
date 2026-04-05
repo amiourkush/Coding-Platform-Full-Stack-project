@@ -1,32 +1,29 @@
-const { getlanguagebyId, submitBatch, submitToken } = require("../utils/problemUtility");
+const { submitVisibleCode} = require("../utils/problemUtility");
 const Problem = require("../models/problem")
 const User = require("../models/user");
 const submission = require("../models/submission");
 
 const createProblem = async (req, res) => {
+   
 
     const { title, description, difficulty, tags, visibleTestcase, hiddenTestcase, startcode, referenceCode, problemCreator } = req.body;
     for (const { language, completecode } of referenceCode) {
 
-        const languageId = getlanguagebyId(language);
-
-        const submission = visibleTestcase.map(({ input, output }) => ({
-            source_code: completecode,
-            language_id: languageId,
-            stdin: input,
-            expected_output: output
+        //const languageId = getlanguagebyId(language);
+        const submission = visibleTestcase?.map((result) => ({
+            language: language,
+            code: completecode,
+            input: result.input,
+            output: result.output
+            
         }));
 
-        const submitResult = await submitBatch(submission);
-        const resultToken = submitResult.map((value) => value.token);
-        const resultb = await submitToken(resultToken);
+        const result = await submitVisibleCode(submission);
+        if(result!=1){
+            res.send(result);
 
-        for (const test of resultb) {
-            if (test.status_id != 3) {
-                return res.status(400).send("Error Occured");
-            }
         }
-    }
+ }
 
     const userProblem = await Problem.create({ ...req.body, problemCreator: req.result._id })
     res.status(200).send("Problem Saved Successfully");
@@ -40,28 +37,49 @@ const problemUpdate = async (req, res) => {
         if (!id) { return res.status(404).send("ID Field is Missing") }
         const dsaproblem = await Problem.findById(id);
         if (!dsaproblem) { return res.status(404).send("Invalid Problem ID") }
-        const { title, description, difficulty, tags, visibleTestcase, hiddenTestcase, startcode, referenceCode, problemCreator } = req.body;
-        for (const { language, completecode } of referenceCode) {
+        // const { title, description, difficulty, tags, visibleTestcase, hiddenTestcase, startcode, referenceCode, problemCreator } = req.body;
+        // for (const { language, completecode } of referenceCode) {
 
-            const languageId = getlanguagebyId(language);
+        //     const languageId = getlanguagebyId(language);
 
-            const submission = visibleTestcase.map(({ input, output }) => ({
-                source_code: completecode,
-                language_id: languageId,
-                stdin: input,
-                expected_output: output
-            }));
+        //     const submission = visibleTestcase.map(({ input, output }) => ({
+        //         source_code: completecode,
+        //         language_id: languageId,
+        //         stdin: input,
+        //         expected_output: output
+        //     }));
 
-            const submitResult = await submitBatch(submission);
-            const resultToken = submitResult.map((value) => value.token);
-            const resultb = await submitToken(resultToken);
+        //     const submitResult = await submitBatch(submission);
+        //     const resultToken = submitResult.map((value) => value.token);
+        //     const resultb = await submitToken(resultToken);
 
-            for (const test of resultb) {
-                if (test.status_id != 3) {
-                    return res.status(400).send("Error Occured");
-                }
-            }
+        //     for (const test of resultb) {
+        //         if (test.status_id != 3) {
+        //             return res.status(400).send("Error Occured");
+        //         }
+        //     }
+        // }
+         const { title, description, difficulty, tags, visibleTestcase, hiddenTestcase, startcode, referenceCode, problemCreator } = req.body;
+    for (const { language, completecode } of referenceCode) {
+
+        //const languageId = getlanguagebyId(language);
+        const submission = visibleTestcase?.map((result) => ({
+            language: language,
+            code: completecode,
+            input: result.input,
+            output: result.output
+            
+        }));
+
+        const result = await submitVisibleCode(submission);
+        if(result!=1){
+            res.send(result);
+
         }
+ }
+        
+
+
 
         const newProblem = await Problem.findByIdAndUpdate(id, { ...req.body }, { runValidators: true, new: true })  //here new means that return the document which has updated that means newly edited.and validator means it will check validation 
         res.status(200).send("Problem Updated Successfully");
@@ -145,3 +163,16 @@ const submittedProblem = async(req,res)=>{
     }
 }
 module.exports = { createProblem, problemUpdate, problemDelete, getProblemById, getAllProblem ,solvedAllProblemByUser,submittedProblem};
+
+
+
+
+// const submitResult = await submitBatch(submission);
+//         const resultToken = submitResult.map((value) => value?.token);
+//         const resultb = await submitToken(resultToken);
+
+//         for (const test of resultb) {
+//             if (test.status_id != 3) {
+//                 return res.status(400).send("Error Occured");
+//             }
+//         }
