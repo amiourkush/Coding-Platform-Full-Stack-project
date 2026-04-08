@@ -1,12 +1,14 @@
 import { useDispatch,useSelector } from "react-redux";
 import { useState } from "react";
+import { useEffect } from "react";
 import { logout } from "../authSlice";
+import axiosClient from "../utils/axiosClient";
 
 function Homepage(){
 
     const {user} = useSelector((state)=>state.auth);
     const dispatch =useDispatch();
-    const [probelm,setProblem] = useState([]);
+    const [problem,setProblem] = useState([]);
     const [solvedProblem,setSolvedProblem] =useState([]);
     const [filter,setFilter] = useState({
       difficulty:"all",
@@ -19,6 +21,18 @@ function Homepage(){
       await dispatch(logout());
 
     }
+    useEffect(()=>{
+      const fetchAllproblem =async()=>{
+        try{
+          const response = await axiosClient.get("/problem/getAllProblem");
+          setProblem(response.data);
+        }catch(err){
+          console.log("Error " +err);
+        }
+      }
+      fetchAllproblem();
+    },[])
+   
     return(
        <>
        <div className="h-screen bg-[#0f0f0f] text-gray-200 flex flex-col">
@@ -84,14 +98,14 @@ function Homepage(){
 
     <div className="bg-[#1a1a1a] rounded-xl p-6 shadow-md border border-gray-800">
       <h2 className="text-lg font-semibold mb-4">Problems</h2>
+       {
+        problem.map(problem=><div key={problem._id}  className="flex justify-between items-center py-3 border-b border-gray-800 hover:bg-[#222] px-3 rounded-md transition">
+        <span>{problem.title}</span>
+        <span className="text-green-400 text-sm">{problem.difficulty}</span></div>)
+       }
+     
 
-      {/* Example row */}
-      <div className="flex justify-between items-center py-3 border-b border-gray-800 hover:bg-[#222] px-3 rounded-md transition">
-        <span>Two Sum</span>
-        <span className="text-green-400 text-sm">Easy</span>
-      </div>
-
-      <div className="flex justify-between items-center py-3 border-b border-gray-800 hover:bg-[#222] px-3 rounded-md transition">
+      {/* <div className="flex justify-between items-center py-3 border-b border-gray-800 hover:bg-[#222] px-3 rounded-md transition">
         <span>3Sum</span>
         <span className="text-yellow-400 text-sm">Medium</span>
       </div>
@@ -99,7 +113,7 @@ function Homepage(){
       <div className="flex justify-between items-center py-3 hover:bg-[#222] px-3 rounded-md transition">
         <span>Merge K Lists</span>
         <span className="text-red-400 text-sm">Hard</span>
-      </div>
+      </div> */}
 
     </div>
 

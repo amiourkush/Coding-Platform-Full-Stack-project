@@ -50,11 +50,11 @@ function Loginpage(){
                 type="email"
                 placeholder="Enter your email"
                 className="input input-bordered"
-                {...register("email")}
+                {...register("emailId")}
               />
-              {errors.email && (
+              {errors.emailId && (
                 <span className="text-red-500 text-sm mt-1">
-                  {errors.email.message}
+                  {errors.emailId.message}
                 </span>
               )}
             </div>

@@ -118,7 +118,7 @@ const runCode = async(req,res)=>{
         const resultToken = submitResult.map((value) => value.token);
         const resultb = await submitToken(resultToken);
         
-       res.status(200).send(resultb)
+       res.status(200).send(resultb);
     }catch(err){
 
         res.status(404).send("Intenal Server Error"+err);

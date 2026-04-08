@@ -122,7 +122,9 @@ const getAllProblem = async (req, res) => {
         const getProblem = await Problem.find({}).select("_id title  difficulty tags "); // we can send only fileds we want by select . ALso if we want to send all except one field , then it can be done by select(" -hiddenTestCase") , means by adding minus sign
         if (getProblem.length == 0)
              { return res.status(404).send("Problem is Misssing") }; //as getprobelm will be array , as find({}) will retuen an array, so if length of array is 0 , then throow error.
+        console.log(getProblem);
         res.status(200).send(getProblem)
+       
 
     } catch (err) {
         res.status(404).send(err);
