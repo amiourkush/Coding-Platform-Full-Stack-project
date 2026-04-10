@@ -30,18 +30,38 @@ function Homepage(){
           console.log("Error " +err);
         }
       }
+
+      const fetchSolvedProblem = async()=>{
+        try{
+          const response = await axiosClient.get("/problem/solvedAllProblemByUser");
+          setSolvedProblem(response.data);
+        }catch(err){
+          console.log("Error "+err);
+        }
+      }
+
       fetchAllproblem();
-    },[])
-   
-    return(
+      if(user) fetchSolvedProblem();
+    },[user])
+
+    const filteredProblem = problem.filter(problem=>{
+    const difficultyMatch = filter.difficulty==="all" || problem.difficulty===filter.difficulty;
+    const tagMatch = filter.tags==="all" || problem.tags===filter.tags;
+    const statusMatch = filter.status==="all" || solvedProblem.some(sp=>sp._id===problem._id);
+  
+     return tagMatch && statusMatch && difficultyMatch;
+
+   })
+
+   return(
        <>
        <div className="h-screen bg-[#0f0f0f] text-gray-200 flex flex-col">
 
-  {/* Navbar */}
-  <div className="flex justify-between items-center px-8 py-4 bg-[#1a1a1a] shadow-md">
-    <h1 className="text-xl font-semibold tracking-wide">LeetCode</h1>
+  
+     <div className="flex justify-between items-center px-8 py-4 bg-[#1a1a1a] shadow-md">
+     <h1 className="text-xl font-semibold tracking-wide">LeetCode</h1>
 
-    <div className="relative">
+     <div className="relative">
       <button
         className="px-4 py-1 border border-gray-600 rounded-lg hover:bg-gray-800 transition"
         onClick={() => setDropOption(!dropOption)}
@@ -58,8 +78,6 @@ function Homepage(){
       )}
     </div>
   </div>
-
-  {/* Filters */}
   <div className="flex justify-center gap-10 py-4 bg-[#141414] border-b border-gray-800">
 
     <select
@@ -93,27 +111,19 @@ function Homepage(){
 
   </div>
 
-  {/* Content Area */}
+  
   <div className="flex-1 p-6 overflow-auto">
 
     <div className="bg-[#1a1a1a] rounded-xl p-6 shadow-md border border-gray-800">
       <h2 className="text-lg font-semibold mb-4">Problems</h2>
        {
-        problem.map(problem=><div key={problem._id}  className="flex justify-between items-center py-3 border-b border-gray-800 hover:bg-[#222] px-3 rounded-md transition">
-        <span>{problem.title}</span>
-        <span className="text-green-400 text-sm">{problem.difficulty}</span></div>)
+        filteredProblem.map(problem=><div key={problem._id}  className="flex justify-between items-center py-3 border-b border-gray-800 hover:bg-[#222] px-3 rounded-md transition">
+        <span>{problem.title}{solvedProblem.some(sp=>sp._id==problem._id) && <span className="ml-2 text-green-400 text-sm">✔ Solved</span>}</span>
+        <span className="text-green-400 text-sm">{problem.difficulty}</span>
+        
+        </div>)
        }
      
-
-      {/* <div className="flex justify-between items-center py-3 border-b border-gray-800 hover:bg-[#222] px-3 rounded-md transition">
-        <span>3Sum</span>
-        <span className="text-yellow-400 text-sm">Medium</span>
-      </div>
-
-      <div className="flex justify-between items-center py-3 hover:bg-[#222] px-3 rounded-md transition">
-        <span>Merge K Lists</span>
-        <span className="text-red-400 text-sm">Hard</span>
-      </div> */}
 
     </div>
 

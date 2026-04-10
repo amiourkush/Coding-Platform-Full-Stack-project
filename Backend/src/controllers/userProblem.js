@@ -138,7 +138,7 @@ const solvedAllProblemByUser = async(req,res)=>{
 
         const userId = req.result._id;
         const user = await User.findById(userId).populate({
-            path:"probelmSolved", //if wriiten const user = await User.findById(userId).populate("probelmSolved"),then populate will give all the details of ref.
+            path:"problemSolved", //if wriiten const user = await User.findById(userId).populate("probelmSolved"),then populate will give all the details of ref.
             selected:"_id title tags difficulty"  //populate uses the power of reference used in Schmema Creation, as populate will fetch the whole refernece you written in Schema and if you waant to send only selected field , then use selected
         });
 
