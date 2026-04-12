@@ -5,6 +5,8 @@ import Loginpage from "./pages/Loginpage"
 import { useDispatch, useSelector} from "react-redux";
 import {check} from "./authSlice";
 import { useEffect } from "react";
+import Loader from "./utils/Loading";
+import ProblemPage from "./pages/ProblemPage";
 
 
 function App(){
@@ -15,7 +17,7 @@ function App(){
     dispatch(check());
    },[dispatch]);    
    if (loading) {
-    return <div>Loading...</div>;
+    return <Loader/>;
   }                                 // it will render only once
 
     return(
@@ -25,6 +27,7 @@ function App(){
             <Route path="/" element={isAuthenticated ?<Homepage/>:<Navigate to="/signup" />}></Route>
             <Route path="/login" element={isAuthenticated ?<Navigate to="/" />:<Loginpage/>}></Route>
             <Route path="/signup" element={isAuthenticated ? <Navigate to="/" />:<Signpage/>}></Route>
+            <Route path="/problem/:id" element={<ProblemPage/>}></Route>
 
         </Routes>
         </>

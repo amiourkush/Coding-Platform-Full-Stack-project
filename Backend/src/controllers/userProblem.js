@@ -19,9 +19,9 @@ const createProblem = async (req, res) => {
         }));
 
         const result = await submitVisibleCode(submission);
-        if(result!=1){
-            res.send(result);
-
+        const filtered = result.find(f=>f.passed==false);
+        if(filtered.length>0){
+            return res.send(result);
         }
  }
 
@@ -105,6 +105,7 @@ const problemDelete = async (req, res) => {
 
 const getProblemById = async (req, res) => {
     const { id } = req.params;
+    //console.log("hello")
     try {
         if (!id) { return res.status(404).send("ID is Missing") }
         const getproblem = await Problem.findById(id).select("_id title description difficulty tags visibleTestcase startcode referenceCode");

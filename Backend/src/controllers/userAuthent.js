@@ -19,10 +19,11 @@ const register = async(req,res)=>{
          const user= await User.create(req.body);
         //  req.body.role ="user"
          const token = jwt.sign({_id :user._id,emailId:emailId,role:"user"},process.env.JWT_KEY,{expiresIn : 60*60})
-          const reply ={
-        firstName : user.firstName,
-        emailId : user.emailId,
-        _id : user._id
+          const reply = {
+            firstName : user.firstName,
+            emailId : user.emailId,
+             _id : user._id,
+             role: user.role
     }
         res.cookie("token",token,{maxAge:60*60*1000});
       //  res.status(200).send("Successfully Registered");
@@ -33,10 +34,10 @@ const register = async(req,res)=>{
 
     }
     catch(err){
-          console.log("FULL ERROR 👉", err);   
-    res.status(400).json({
-        message: err.message,
-        error: err
+          console.log("FULL ERROR",err);   
+         res.status(400).json({
+         message: err.message,
+         error: err
     });
     }
 }
@@ -61,7 +62,8 @@ const login =async(req,res)=>{
    const reply ={
         firstName : user.firstName,
         emailId : user.emailId,
-        _id : user._id
+        _id : user._id,
+        role:user.role
     }
     res.cookie("token",token,{maxAge:60*60*1000})
     res.status(201).json({

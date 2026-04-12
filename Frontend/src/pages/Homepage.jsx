@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { logout } from "../authSlice";
 import axiosClient from "../utils/axiosClient";
+import { NavLink } from "react-router";
 
 function Homepage(){
 
@@ -117,12 +118,35 @@ function Homepage(){
     <div className="bg-[#1a1a1a] rounded-xl p-6 shadow-md border border-gray-800">
       <h2 className="text-lg font-semibold mb-4">Problems</h2>
        {
-        filteredProblem.map(problem=><div key={problem._id}  className="flex justify-between items-center py-3 border-b border-gray-800 hover:bg-[#222] px-3 rounded-md transition">
-        <span>{problem.title}{solvedProblem.some(sp=>sp._id==problem._id) && <span className="ml-2 text-green-400 text-sm">✔ Solved</span>}</span>
-        <span className="text-green-400 text-sm">{problem.difficulty}</span>
-        
-        </div>)
-       }
+  filteredProblem.map(problem => (
+    <div
+      key={problem._id}
+      className="flex justify-between items-center py-3 border-b border-gray-800 hover:bg-[#222] px-3 rounded-md transition"
+    >
+
+      {/* 🔥 CLICKABLE TITLE */}
+      <NavLink
+        to={`/problem/${problem._id}`}
+        className="flex-1"
+      >
+        <span>
+          {problem.title}
+
+          {solvedProblem.some(sp => sp._id == problem._id) && (
+            <span className="ml-2 text-green-400 text-sm">
+              ✔ Solved
+            </span>
+          )}
+        </span>
+      </NavLink>
+
+      <span className="text-green-400 text-sm">
+        {problem.difficulty}
+      </span>
+
+    </div>
+  ))
+}
      
 
     </div>

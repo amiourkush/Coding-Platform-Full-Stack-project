@@ -26,18 +26,42 @@ const executeCode = async ({ language, code, input }) => {
 
 
 const submitVisibleCode =async(submission)=>{
+  const allVisibleResult =[]
   for(const data of submission){
     const result = await executeCode(data);
     if(data?.output.trim()!=result?.output.trim()){
-      return [data.output,result.output];
+      allVisibleResult.passed =true;
+      allVisibleResult.push(result);
          
+    }
+    else{
+      allVisibleResult.passed = false;
+      allVisibleResult.push(result);
     }
     
   }
-  return 1;
+  return allVisibleResult;
 }
 
-module.exports ={executeCode,submitVisibleCode};
+const submitHiddenCode = async(submission)=>{
+  const allResult =[];
+  for(const data of submission){
+    const result = await executeCode(data);
+    if(result?.output.trim()==data.output.trim()){
+     result.passed = true; 
+    allResult.push(result);
+  }
+    else{
+      result.passed =false;
+      allResult.push(result);
+      break;
+    }
+    
+  }
+  return allResult;
+}
+
+module.exports ={executeCode,submitVisibleCode,submitHiddenCode};
 
 
 

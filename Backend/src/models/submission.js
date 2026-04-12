@@ -18,7 +18,7 @@ const submissionSchema = new Schema({
     language: {
         type:String,
         required:true,
-        enum :["javascript","c++","java"]
+        enum :["python","c++","java"]
     },
     status:{
         type:String,
@@ -52,5 +52,5 @@ const submissionSchema = new Schema({
 
 submissionSchema.index({userId:1,problemId:1});
 
-const submission = mongoose.model("submission",submissionSchema);
-module.exports = submission;
+const Submission = mongoose.model("submission",submissionSchema);
+module.exports = Submission;
