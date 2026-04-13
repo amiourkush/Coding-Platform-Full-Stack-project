@@ -89,7 +89,7 @@ function ProblemPage() {
       
 
     } catch {
-      setSubmitResult({ status: "Error" });
+      setSubmitResult({ status: "Error" })
     }
 
     setLoading(false);
