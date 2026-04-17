@@ -25,13 +25,13 @@ function App(){
     return(
         <>
         <Routes>
-             {/* <Route path="/" element={<Homepage/>}></Route> 
+             <Route path="/" element={<Homepage/>}></Route> 
              <Route path="/" element={isAuthenticated ?<Homepage/>:<Navigate to="/signup" />}></Route>
             <Route path="/login" element={isAuthenticated ?<Navigate to="/" />:<Loginpage/>}></Route>
             <Route path="/signup" element={isAuthenticated ? <Navigate to="/" />:<Signpage/>}></Route>
             <Route path="/problem/:id" element={<ProblemPage/>}></Route>
             <Route path="/admin" element={<AdminPage/>}></Route>
-            <Route path="/create" element={<CreateProblem/>}></Route> */}
+            <Route path="/create" element={<CreateProblem/>}></Route>
 
         </Routes>
         </>
