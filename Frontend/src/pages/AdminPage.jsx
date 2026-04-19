@@ -11,13 +11,7 @@ export default function AdminPage() {
       glow: "from-green-400 via-emerald-500 to-transparent",
       route: "/create"
     },
-    {
-      title: "Update Problem",
-      description: "Edit existing problems",
-      icon: <Pencil size={34} />,
-      glow: "from-blue-400 via-indigo-500 to-transparent",
-      route :"/update"
-    },
+    
     {
       title: "Delete Problem",
       description: "Remove problems",

@@ -9,6 +9,8 @@ import { useEffect } from "react";
 import Loader from "./utils/Loading";
 import ProblemPage from "./pages/ProblemPage";
 import CreateProblem from "./components/CreateProblem";
+import UpdateProblem from "./components/UpdateProbelm";
+import DeleteProblem from "./components/DeleteProblem";
 
 
 function App(){
@@ -29,9 +31,11 @@ function App(){
              <Route path="/" element={isAuthenticated ?<Homepage/>:<Navigate to="/signup" />}></Route>
             <Route path="/login" element={isAuthenticated ?<Navigate to="/" />:<Loginpage/>}></Route>
             <Route path="/signup" element={isAuthenticated ? <Navigate to="/" />:<Signpage/>}></Route>
-            <Route path="/problem/:id" element={<ProblemPage/>}></Route>
+            <Route path="/problem/:id" element={<ProblemPage/>}></Route> */}
             <Route path="/admin" element={<AdminPage/>}></Route>
-            <Route path="/create" element={<CreateProblem/>}></Route> */}
+            <Route path="/create" element={<CreateProblem/>}></Route>
+            <Route path="/update/:id" element={<UpdateProblem></UpdateProblem>}></Route>
+            <Route path="/delete" element={<DeleteProblem/>}></Route>
 
         </Routes>
         </>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import axiosClient from "../utils/axiosClient";
 
 export default function CreateProblem() {
   const [form, setForm] = useState({
@@ -12,6 +13,7 @@ export default function CreateProblem() {
     startcode: [{ language: "cpp", initialcode: "" }],
     referenceCode: [{ language: "cpp", completecode: "" }],
   });
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -32,9 +34,17 @@ export default function CreateProblem() {
     setForm({ ...form, [type]: updated.length ? updated : form[type] });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    console.log(form);
+    try{
+       await axiosClient.post("/problem/create",{
+        ...form
+       })
+       setShowSuccess(true);
+    }catch(err){
+      console.log("Error form handlesubmit :"+err);
+    }
+   
   };
 
   return (
@@ -179,6 +189,48 @@ export default function CreateProblem() {
 
         </form>
       </div>
+      {showSuccess && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+    <div className="bg-[#0a0a0a] p-8 rounded-2xl border border-gray-700 w-[400px] text-center">
+      
+      <h2 className="text-2xl font-semibold mb-4 text-green-400">
+        Problem Created Successfully 
+      </h2>
+
+      <div className="flex justify-center gap-4 mt-6">
+        
+        {/* Go Back */}
+        <button
+          onClick={() => window.history.back()}
+          className="px-4 py-2 border border-gray-500 rounded-lg hover:border-white"
+        >
+          Go Back
+        </button>
+
+        {/* Create Another */}
+        <button
+          onClick={() => {
+            setShowSuccess(false);
+            setForm({
+              title: "",
+              description: "",
+              difficulty: "Easy",
+              tags: "Array",
+              visibleTestcase: [{ input: "", output: "", explanation: "" }],
+              hiddenTestcase: [{ input: "", output: "" }],
+              startcode: [{ language: "cpp", initialcode: "" }],
+              referenceCode: [{ language: "cpp", completecode: "" }],
+            });
+          }}
+          className="px-4 py-2 bg-white text-black rounded-lg"
+        >
+          Create Another
+        </button>
+
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

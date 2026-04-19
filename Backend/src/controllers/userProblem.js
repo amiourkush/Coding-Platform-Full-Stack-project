@@ -72,11 +72,11 @@ const problemUpdate = async (req, res) => {
         }));
 
         const result = await submitVisibleCode(submission);
-        if(result!=1){
-            res.send(result);
-
+        const filtered = result.find(f=>f.passed==false);
+        if(filtered.length>0){
+            return res.send(result);
         }
- }
+}
         
 
 
@@ -95,7 +95,7 @@ const problemDelete = async (req, res) => {
     const { id } = req.params;
     try {
         if (!id) { return res.status(404).send("ID is Missing") }
-        const deletedProblem = await problem.findByIdAndDelete(id);
+        const deletedProblem = await Problem.findByIdAndDelete(id);
         if (!deletedProblem) { return res.status(404).send("ID is not valid") };
         res.status(200).send("Problem Deleted");
     } catch (err) {
