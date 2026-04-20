@@ -29,7 +29,7 @@ function Homepage() {
 
       await axiosClient.delete(`/problem/delete/${selectedProblem._id}`);
 
-      // 🔥 instant UI update
+      
       setProblem(prev =>
         prev.filter(p => p._id !== selectedProblem._id)
       );
