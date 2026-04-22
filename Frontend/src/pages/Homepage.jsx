@@ -6,10 +6,7 @@ import axiosClient from "../utils/axiosClient";
 import { NavLink } from "react-router";
 
 function Homepage() {
-  const [openMenuId, setOpenMenuId] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedProblem, setSelectedProblem] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+ 
 
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
