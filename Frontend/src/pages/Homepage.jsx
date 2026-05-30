@@ -4,8 +4,12 @@ import { useEffect } from "react";
 import { logout } from "../authSlice";
 import axiosClient from "../utils/axiosClient";
 import { NavLink } from "react-router";
+import { useNavigate } from "react-router-dom";
 
+ 
 function Homepage() {
+  const navigate = useNavigate();
+
   const [openMenuId, setOpenMenuId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProblem, setSelectedProblem] = useState(null);
@@ -21,6 +25,7 @@ function Homepage() {
     status: "all"
   })
   const [dropOption, setDropOption] = useState(false);
+  
   const handleDelete = async () => {
     if (!selectedProblem) return;
 
@@ -48,6 +53,8 @@ function Homepage() {
     await dispatch(logout());
 
   }
+
+ 
   useEffect(() => {
     const fetchAllproblem = async () => {
       try {
@@ -82,6 +89,7 @@ function Homepage() {
 
   return (
     <>
+      
       <div className="h-screen bg-[#0f0f0f] text-gray-200 flex flex-col">
 
 
@@ -101,6 +109,9 @@ function Homepage() {
                 <div className="px-4 py-2 hover:bg-gray-800 cursor-pointer" onClick={handlelogout}>
                   Logout
                 </div>
+                {user.role=="admin"&&<div className="px-4 py-2 hover:bg-gray-800 cursor-pointer" onClick={()=>navigate("/admin")}>
+                  Admin
+                </div>}
               </div>
             )}
           </div>

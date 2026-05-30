@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { PlusCircle, Pencil, Trash2 } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Video } from "lucide-react";
 import { Link, Navigate } from "react-router";
 
 export default function AdminPage() {
@@ -11,6 +11,13 @@ export default function AdminPage() {
       glow: "from-green-400 via-emerald-500 to-transparent",
       route: "/create"
     },
+    {
+    title: "Update Problem",
+    description: "Edit existing problems",
+    icon: <Pencil size={34} />,
+    glow: "from-blue-400 via-cyan-500 to-transparent",
+    route: "/update",
+  },
     
     {
       title: "Delete Problem",
@@ -19,6 +26,13 @@ export default function AdminPage() {
       glow: "from-red-400 via-pink-500 to-transparent",
       route:"/delete"
     },
+    {
+      title: "Upload Video",
+      description: "Upload and Delete Video",
+      icon: <Video size={34} />,
+      glow: "from-green-400 via-emerald-500 to-transparent",
+      route: "/admin/upload"
+    }
   ];
 
   return (

@@ -2,6 +2,7 @@ const { submitVisibleCode} = require("../utils/problemUtility");
 const Problem = require("../models/problem")
 const User = require("../models/user");
 const submission = require("../models/submission");
+const Video = require("../models/video");
 
 const createProblem = async (req, res) => {
    
@@ -110,6 +111,18 @@ const getProblemById = async (req, res) => {
         if (!id) { return res.status(404).send("ID is Missing") }
         const getproblem = await Problem.findById(id).select("_id title description difficulty tags visibleTestcase startcode referenceCode");
         if (!getproblem) { return res.status(404).send("ID is invalid") };
+        const video = await Video.findOne({problemId:id});
+        if(video){
+             
+            const response = {...getproblem.toObject(),secureUrl:video.secureUrl,thumbnailUrl : video.thumbnailUrl,duration: video.duration}
+
+            // getproblem. cloudinaryPublicId= video.cloudinaryPublicId;
+            // getproblem.secureUrl=video.secureUrl;
+            // getproblem.thumbnailUrl = video.thumbnailUrl;
+            // getproblem.duration = video.duration
+
+            return res.status(200).send(response)
+        }
         res.status(200).send(getproblem)
     } catch (err) {
         res.status(404).send(err);

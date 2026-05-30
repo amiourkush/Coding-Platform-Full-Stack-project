@@ -3,6 +3,8 @@ import Editor from "@monaco-editor/react";
 import axios from "axios";
 import axiosClient from "../utils/axiosClient";
 import { useParams } from "react-router";
+import ChatPage from "./ChatPage";
+import Editorial from "../components/Editorial";
 
 function ProblemPage() {
   const [problem, setProblem] = useState(null);
@@ -18,7 +20,7 @@ function ProblemPage() {
 
   const { id } = useParams();
 
-  // 🔥 Fetch data
+  // Fetch data
   useEffect(() => {
     async function fetchData() {
       const prob = await axiosClient.get(`/problem/getProblemById/${id}`);
@@ -70,7 +72,7 @@ function ProblemPage() {
     setLoading(false);
   };
 
-  // 🔥 SUBMIT
+  // SUBMIT
   const submitCode = async () => {
     setLoading(true);
     setSubmitResult(null);
@@ -117,16 +119,23 @@ function ProblemPage() {
             Description
           </button>
 
-          {problem.editorial && (
+          
             <button className={`tab ${tab === "editorial" && "tab-active"}`} onClick={() => setTab("editorial")}>
               Editorial
             </button>
-          )}
+          
 
           <button className={`tab ${tab === "submissions" && "tab-active"}`} onClick={() => setTab("submissions")}>
             Submissions
           </button>
+
+          <button className={`tab ${tab === "chatAI" && "tab-active"}`} onClick={() => setTab("chatAI")}>
+            ChatAI
+          </button>
         </div>
+
+         
+        
 
         {/* Content */}
         <div className="p-4 overflow-y-auto flex-1">
@@ -151,7 +160,9 @@ function ProblemPage() {
             </>
           )}
 
-          {tab === "editorial" && <div>🚧 Dummy Editorial</div>}
+          {tab === "editorial" && <div>
+            <Editorial secureUrl={problem.secureUrl} thumbnailUrl={problem.thumbnailUrl} duration={problem.duration}/>
+            </div>}
 
           {tab === "submissions" && (
             <div>
@@ -161,6 +172,12 @@ function ProblemPage() {
                   <p>{s.testCasesPassed}/{s.testCasesTotal}</p>
                 </div>
               ))}
+            </div>
+          )}
+
+            {tab === "chatAI" && (
+            <div>
+             <ChatPage problem={problem}/>
             </div>
           )}
 

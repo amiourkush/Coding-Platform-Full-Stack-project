@@ -6,7 +6,9 @@ const authRouter = require("./routes/userAuth")
 const problemRouter = require("./routes/problemFetch")
 const redisClient = require("./config/redis")
 const submitRouter = require("./routes/submit");
+const aiRouter = require("./routes/aiChatting");
 const cors = require("cors");
+const videoRouter = require("./routes/video");
 const app = express();
 
 app.use(cors({
@@ -20,7 +22,8 @@ app.use(cookieParser());
 app.use("/user",authRouter)
 app.use("/problem",problemRouter)
 app.use("/submission",submitRouter)
-
+app.use("/ai",aiRouter);
+app.use("/video",videoRouter);
 
 
 
