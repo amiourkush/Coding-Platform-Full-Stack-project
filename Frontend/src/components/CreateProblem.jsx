@@ -159,7 +159,7 @@ export default function CreateProblem() {
 
           {/* Reference Code */}
           <Section title="Reference Code (Multiple Languages)">
-            {form.referenceCode.map((rc, i) => (
+            {form.referenceCode.map((rc, i) => (      
               <TestcaseCard key={i}>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">Language {i + 1}</span>
@@ -181,9 +181,9 @@ export default function CreateProblem() {
           </Section>
 
           <button
-  type="submit"
-  className="w-full text-lg font-semibold py-4 rounded-2xl border-2 border-gray-600 hover:border-white transition-colors duration-200 bg-black"
->
+        type="submit"
+        className="w-full text-lg font-semibold py-4 rounded-2xl border-2 border-gray-600 hover:border-white transition-colors duration-200 bg-black"
+        >
   Create Problem
 </button>
 

@@ -1,27 +1,22 @@
 import { useEffect, useState } from "react";
 import axiosClient from "../utils/axiosClient";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProblems } from "../problemSlice";
 
 export default function DeleteProblem() {
-  const [problems, setProblems] = useState([]);
+  //const [problem, setProblems] = useState([]);
   const [selected, setSelected] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const {problem} = useSelector((state)=>state.problem);
+  const dispatch = useDispatch();
 
   
-  const fetchProblems = async () => {
-    try {
-      const { data } = await axiosClient.get("/problem/getAllProblem");
-      console.log(data);
-      setProblems(data);
-      console.log(problems);
-    } catch (err) {
-      console.log("Fetch error:", err);
-    }
-  };
-
+  
   useEffect(() => {
-    fetchProblems();
-  }, []);
+   
+    dispatch(fetchProblems());
+  }, [dispatch]);
 
   
   const handleDelete = async () => {
@@ -56,7 +51,7 @@ export default function DeleteProblem() {
 
       
         <div className="grid gap-4">
-          {problems.map((p) => (
+          {problem.map((p) => (
             <div
               key={p._id}
               onClick={() => {

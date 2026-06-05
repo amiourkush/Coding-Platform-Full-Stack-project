@@ -1,27 +1,22 @@
 import { useEffect, useState } from "react";
 import axiosClient from "../utils/axiosClient";
 import { useNavigate } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProblems } from "../problemSlice";
 
 export default function UploadVideo() {
-  const [problems, setProblems] = useState([]);
+  //const [problem, setProblems] = useState([]);
   const [selected, setSelected] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const {problem} = useSelector((state=>state.problem))
+  const dispatch = useDispatch();
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProblems = async () => {
-      try {
-        const { data } = await axiosClient.get("/problem/getAllProblem");
-        setProblems(data);
-      } catch (error) {
-        console.error("Failed to fetch problems:", error);
-      }
-    };
-
-    fetchProblems();
-  }, []);
+      dispatch(fetchProblems());
+  }, [dispatch]);
 
   const openModal = (problem) => {
     setSelected(problem);
@@ -66,7 +61,7 @@ export default function UploadVideo() {
         </h1>
 
         <div className="grid gap-4">
-          {problems.map((problem) => (
+          {problem.map((problem) => (
             <div
               key={problem._id}
               onClick={() => openModal(problem)}

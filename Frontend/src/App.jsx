@@ -13,6 +13,7 @@ import UpdateProblem from "./components/UpdateProbelm";
 import DeleteProblem from "./components/DeleteProblem";
 import UploadVideo from "./components/UploadVideo"
 import Uploading from "./components/Uploading";
+import AdminUpdate from "./components/AdminUpdate";
 
 
 function App(){
@@ -39,7 +40,8 @@ function App(){
             <Route path="/update/:id" element={isAuthenticated && user.role=="admin" ?<UpdateProblem></UpdateProblem>:<Navigate to="\"/>}></Route>
             <Route path="/delete" element={isAuthenticated && user.role=="admin" ?<DeleteProblem/>:<Navigate to="\"/>}></Route>
             <Route path="/admin/upload" element={isAuthenticated && user.role=="admin" ?<UploadVideo/>:<Navigate to="\"/>}></Route>
-            <Route path="/admin/uploading/:problemId" element={isAuthenticated && user.role=="admin" ?<Uploading/>:<Navigate to="\"/>}></Route>    
+            <Route path="/admin/uploading/:problemId" element={isAuthenticated && user.role=="admin" ?<Uploading/>:<Navigate to="\"/>}></Route>  
+            <Route path="/update" element={isAuthenticated && user.role=="admin" ?<AdminUpdate/>:<Navigate to="\"/>}></Route>  
 
         </Routes>
         </>

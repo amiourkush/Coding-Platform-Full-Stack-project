@@ -17,7 +17,7 @@ const {Schema} = mongoose;
     },
     tags : {
         type : String,
-        enum : ["Array","LinkedList","Dp","Graph"],
+        enum : ["Array","LinkedList","Dp","Graph","String"],
         required : true
     },
     visibleTestcase :[{

@@ -1,126 +1,305 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import axiosClient from "../utils/axiosClient";
+import {useParams} from "react-router-dom";
 
 export default function UpdateProblem() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-
-  const [form, setForm] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const {id} = useParams();
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    difficulty: "Easy",
+    tags: "Array",
+    visibleTestcase: [{ input: "", output: "", explanation: "" }],
+    hiddenTestcase: [{ input: "", output: "" }],
+    startcode: [{ language: "cpp", initialcode: "" }],
+    referenceCode: [{ language: "cpp", completecode: "" }],
+  });
   const [showSuccess, setShowSuccess] = useState(false);
+ 
 
-  
-  const fetchProblem = async () => {
-    try {
-      const { data } = await axiosClient.get(`/problem/getProblemById/${id}`);
-      setForm(data);
-    } catch (err) {
-      console.log("Fetch error:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchProblem();
-  }, []);
-
-  
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  
+  const handleArrayChange = (index, field, type, value) => {
+    const updated = [...form[type]];
+    updated[index][field] = value;
+    setForm({ ...form, [type]: updated });
+  };
+
+  const addField = (type, template) => {
+    setForm({ ...form, [type]: [...form[type], template] });
+  };
+
+  const removeField = (type, index) => {
+    const updated = form[type].filter((_, i) => i !== index);
+    setForm({ ...form, [type]: updated.length ? updated : form[type] });
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+
+  try {
+    await axiosClient.put(`/problem/update/${id}`, form);
+
+    setShowSuccess(true);
+  } catch (err) {
+    console.log("Error updating problem:", err);
+  }
+};
+
+useEffect(() => {
+  const fetchProblem = async () => {
     try {
-      setLoading(true);
+      const res = await axiosClient.get(
+        `/problem/getProblemById/${id}`
+      );
 
-      await axiosClient.put(`/problem/update/${id}`, form);
+      const data = res.data;
 
-      setShowSuccess(true);
+      setForm({
+        title: data.title || "",
+        description: data.description || "",
+        difficulty: data.difficulty || "Easy",
+        tags: data.tags || "Array",
+        visibleTestcase:
+          data.visibleTestcase?.length > 0
+            ? data.visibleTestcase
+            : [{ input: "", output: "", explanation: "" }],
+        hiddenTestcase:
+          data.hiddenTestcase?.length > 0
+            ? data.hiddenTestcase
+            : [{ input: "", output: "" }],
+        startcode:
+          data.startcode?.length > 0
+            ? data.startcode
+            : [{ language: "cpp", initialcode: "" }],
+        referenceCode:
+          data.referenceCode?.length > 0
+            ? data.referenceCode
+            : [{ language: "cpp", completecode: "" }],
+      });
     } catch (err) {
-      console.log("Update error:", err);
-    } finally {
-      setLoading(false);
+      console.log("Error fetching problem:", err);
     }
   };
 
-  if (!form) return <div className="text-white p-8">Loading...</div>;
+  fetchProblem();
+}, [id]);
+  
 
   return (
     <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
 
-        <h1 className="text-3xl mb-6">Update Problem</h1>
+        <h1 className="text-4xl font-semibold mb-8">Update Problem</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
 
-          <input
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            className="w-full p-3 bg-black border border-gray-700 rounded"
-            placeholder="Title"
-          />
+          {/* Basic Info */}
+          <div className="bg-[#050505] p-6 rounded-2xl border border-gray-800">
+            <input
+              name="title"
+              value={form.title}
+              placeholder="Title"
+              className="input input-bordered w-full bg-black mb-4"
+              onChange={handleChange}
+            />
 
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            className="w-full p-3 bg-black border border-gray-700 rounded"
-            placeholder="Description"
-          />
+            <textarea
+              name="description"
+              value={form.description}
+              placeholder="Description"
+              className="textarea textarea-bordered w-full bg-black mb-4"
+              onChange={handleChange}
+            />
 
-          <select
-            name="difficulty"
-            value={form.difficulty}
-            onChange={handleChange}
-            className="p-3 bg-black border border-gray-700 rounded"
-          >
-            <option>Easy</option>
-            <option>Medium</option>
-            <option>Hard</option>
-          </select>
+            <div className="flex gap-4">
+              <select name="difficulty" className="select bg-black" onChange={handleChange} value={form.difficulty}>
+                <option>Easy</option>
+                <option>Medium</option>
+                <option>Hard</option>
+              </select>
+
+              <select name="tags" className="select bg-black" onChange={handleChange} value={form.tags}>
+                <option>Array</option>
+                <option>LinkedList</option>
+                <option>Dp</option>
+                <option>Graph</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Visible Testcases */}
+          <Section title="Visible Testcases">
+            {form.visibleTestcase.map((tc, i) => (
+              <TestcaseCard key={i}>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Testcase {i + 1}</span>
+                  {form.visibleTestcase.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeField("visibleTestcase", i)}
+                      className="text-red-400 text-sm"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <input placeholder="Input"  value={tc.input} onChange={(e) => handleArrayChange(i, "input", "visibleTestcase", e.target.value)} />
+                <input placeholder="Output" value={tc.output}  onChange={(e) => handleArrayChange(i, "output", "visibleTestcase", e.target.value)} />
+                <input placeholder="Explanation" value={tc.explanation}  onChange={(e) => handleArrayChange(i, "explanation", "visibleTestcase", e.target.value)} />
+              </TestcaseCard>
+            ))}
+            <AddButton onClick={() => addField("visibleTestcase", { input: "", output: "", explanation: "" })} />
+          </Section>
+
+          {/* Hidden Testcases */}
+          <Section title="Hidden Testcases">
+            {form.hiddenTestcase.map((tc, i) => (
+              <TestcaseCard key={i}>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Testcase {i + 1}</span>
+                  {form.hiddenTestcase.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeField("hiddenTestcase", i)}
+                      className="text-red-400 text-sm"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <input placeholder="Input" value={tc.input} onChange={(e) => handleArrayChange(i, "input", "hiddenTestcase", e.target.value)} />
+                <input placeholder="Output" value={tc.output} onChange={(e) => handleArrayChange(i, "output", "hiddenTestcase", e.target.value)} />
+              </TestcaseCard>
+            ))}
+            <AddButton onClick={() => addField("hiddenTestcase", { input: "", output: "" })} />
+          </Section>
+
+          {/* Start Code */}
+          <Section title="Start Code (Multiple Languages)">
+            {form.startcode.map((sc, i) => (
+              <TestcaseCard key={i}>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Language {i + 1}</span>
+                  {form.startcode.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeField("startcode", i)}
+                      className="text-red-400 text-sm"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <input placeholder="Language (cpp/java/python)" value={sc.language} onChange={(e) => handleArrayChange(i, "language", "startcode", e.target.value)} />
+                <textarea placeholder="Initial Code" value={sc.initialcode} onChange={(e) => handleArrayChange(i, "initialcode", "startcode", e.target.value)} />
+              </TestcaseCard>
+            ))}
+            <AddButton onClick={() => addField("startcode", { language: "", initialcode: "" })} />
+          </Section>
+
+          {/* Reference Code */}
+          <Section title="Reference Code (Multiple Languages)">
+            {form.referenceCode.map((rc, i) => (      
+              <TestcaseCard key={i}>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Language {i + 1}</span>
+                  {form.referenceCode.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeField("referenceCode", i)}
+                      className="text-red-400 text-sm"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <input placeholder="Language (cpp/java/python)" value={rc.language} onChange={(e) => handleArrayChange(i, "language", "referenceCode", e.target.value)} />
+                <textarea placeholder="Complete Code" value={rc.completecode} onChange={(e) => handleArrayChange(i, "completecode", "referenceCode", e.target.value)} />
+              </TestcaseCard>
+            ))}
+            <AddButton onClick={() => addField("referenceCode", { language: "", completecode: "" })} />
+          </Section>
 
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-white text-black rounded font-semibold"
-          >
-            {loading ? "Updating..." : "Update Problem"}
-          </button>
+        type="submit"
+        className="w-full text-lg font-semibold py-4 rounded-2xl border-2 border-gray-600 hover:border-white transition-colors duration-200 bg-black"
+        >
+         Update Problem
+</button>
 
         </form>
       </div>
-
-      
       {showSuccess && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70">
-          <div className="bg-[#0a0a0a] p-6 rounded-xl border border-gray-700 text-center">
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+    <div className="bg-[#0a0a0a] p-8 rounded-2xl border border-gray-700 w-[400px] text-center">
+      
+      <h2 className="text-2xl font-semibold mb-4 text-green-400">
+        Problem Updated Successfully 
+      </h2>
 
-            <h2 className="text-green-400 text-xl mb-4">
-              Problem Updated Successfully 
-            </h2>
+      <div className="flex justify-center gap-4 mt-6">
+        
+        {/* Go Back */}
+        <button
+          onClick={() => window.history.back()}
+          className="px-4 py-2 border border-gray-500 rounded-lg hover:border-white"
+        >
+          Go Back
+        </button>
 
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={() => navigate(-1)}
-                className="px-4 py-2 border border-gray-500 rounded"
-              >
-                Go Back
-              </button>
+        {/* Create Another */}
+        <button
+          onClick={() => {
+            setShowSuccess(false);
+            setForm({
+              title: "",
+              description: "",
+              difficulty: "Easy",
+              tags: "Array",
+              visibleTestcase: [{ input: "", output: "", explanation: "" }],
+              hiddenTestcase: [{ input: "", output: "" }],
+              startcode: [{ language: "cpp", initialcode: "" }],
+              referenceCode: [{ language: "cpp", completecode: "" }],
+            });
+          }}
+          className="px-4 py-2 bg-white text-black rounded-lg"
+        >
+          Create Another
+        </button>
 
-              <button
-                onClick={() => setShowSuccess(false)}
-                className="px-4 py-2 bg-white text-black rounded"
-              >
-                Stay Here
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
+      </div>
     </div>
+  </div>
+)}
+    </div>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <div className="bg-[#050505] p-6 rounded-2xl border border-gray-800">
+      <h2 className="text-xl mb-4">{title}</h2>
+      {children}
+    </div>
+  );
+}
+
+function TestcaseCard({ children }) {
+  return (
+    <motion.div className="border border-gray-700 p-4 rounded-xl mb-4 flex flex-col gap-2 bg-black">
+      {children}
+    </motion.div>
+  );
+}
+
+function AddButton({ onClick }) {
+  return (
+    <button type="button" onClick={onClick} className="btn btn-outline btn-sm mt-2">
+      + Add
+    </button>
   );
 }

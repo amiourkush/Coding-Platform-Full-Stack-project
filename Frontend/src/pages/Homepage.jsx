@@ -5,6 +5,7 @@ import { logout } from "../authSlice";
 import axiosClient from "../utils/axiosClient";
 import { NavLink } from "react-router";
 import { useNavigate } from "react-router-dom";
+import { fetchProblems , fetchSolvedProblems} from "../problemSlice";
 
  
 function Homepage() {
@@ -16,9 +17,10 @@ function Homepage() {
   const [deleting, setDeleting] = useState(false);
 
   const { user } = useSelector((state) => state.auth);
+  const {problem , solvedProblem} = useSelector((state)=>state.problem)
   const dispatch = useDispatch();
-  const [problem, setProblem] = useState([]);
-  const [solvedProblem, setSolvedProblem] = useState([]);
+  //const [problem, setProblem] = useState([]);
+  
   const [filter, setFilter] = useState({
     difficulty: "all",
     tags: "all",
@@ -54,29 +56,16 @@ function Homepage() {
 
   }
 
- 
-  useEffect(() => {
-    const fetchAllproblem = async () => {
-      try {
-        const response = await axiosClient.get("/problem/getAllProblem");
-        setProblem(response.data);
-      } catch (err) {
-        console.log("Error " + err);
-      }
-    }
+ useEffect(() => {
+  dispatch(fetchProblems());
+}, [dispatch]);
 
-    const fetchSolvedProblem = async () => {
-      try {
-        const response = await axiosClient.get("/problem/solvedAllProblemByUser");
-        setSolvedProblem(response.data);
-      } catch (err) {
-        console.log("Error " + err);
-      }
-    }
+useEffect(() => {
+  if (user) {
+    dispatch(fetchSolvedProblems());
+  }
+}, [dispatch, user]);
 
-    fetchAllproblem();
-    if (user) fetchSolvedProblem();
-  }, [user])
 
   const filteredProblem = problem.filter(problem => {
     const difficultyMatch = filter.difficulty === "all" || problem.difficulty === filter.difficulty;

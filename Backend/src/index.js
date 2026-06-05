@@ -9,6 +9,7 @@ const submitRouter = require("./routes/submit");
 const aiRouter = require("./routes/aiChatting");
 const cors = require("cors");
 const videoRouter = require("./routes/video");
+const codeRouter = require("./routes/codeSave");
 const app = express();
 
 app.use(cors({
@@ -24,6 +25,7 @@ app.use("/problem",problemRouter)
 app.use("/submission",submitRouter)
 app.use("/ai",aiRouter);
 app.use("/video",videoRouter);
+app.use("/code",codeRouter)
 
 
 
