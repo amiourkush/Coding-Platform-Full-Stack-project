@@ -1,5 +1,7 @@
 const express = require("express");
 require("dotenv").config();
+const http = require("http");
+const {initSocket } = require("../src/socket/socket");
 const main = require("./config/db")
 const cookieParser = require("cookie-parser")
 const authRouter = require("./routes/userAuth")
@@ -10,6 +12,7 @@ const aiRouter = require("./routes/aiChatting");
 const cors = require("cors");
 const videoRouter = require("./routes/video");
 const codeRouter = require("./routes/codeSave");
+require("./socket/redisSubscriber");
 const app = express();
 
 app.use(cors({
@@ -27,6 +30,8 @@ app.use("/ai",aiRouter);
 app.use("/video",videoRouter);
 app.use("/code",codeRouter)
 
+const server = http.createServer(app);
+
 
 
 const connection = async()=>{
@@ -34,9 +39,20 @@ const connection = async()=>{
     try{
         await Promise.all([main(),redisClient.connect()])
         console.log("DB is connected")
-        app.listen(process.env.PORT,()=>{
-        console.log("Server is Listening at :"+process.env.PORT)
-     })
+           initSocket(server);
+           require("./socket/redisSubscriber");   // added this there , so that socket.io initizialed first , then subscriber will run automatically
+
+        server.listen(
+           process.env.PORT,
+              () => {
+
+                console.log(
+                     "Server is Listening at : "
+                     + process.env.PORT
+                    );
+
+  }
+);
     }
     catch(err){
         console.log("ERR :"+err)

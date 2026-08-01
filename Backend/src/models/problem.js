@@ -64,6 +64,24 @@ const {Schema} = mongoose;
             required : true
         }
     }],
+    runtimeStats: [
+    {
+        language: {
+            type: String,
+            required: true
+        },
+
+        estimatedRuntime: {
+            type: Number,
+            default: 0
+        },
+
+        executionCount: {
+            type: Number,
+            default: 0
+        }
+    }
+],
     problemCreator :{
         type : Schema.Types.ObjectId,
         ref :"user",

@@ -14,6 +14,7 @@ import DeleteProblem from "./components/DeleteProblem";
 import UploadVideo from "./components/UploadVideo"
 import Uploading from "./components/Uploading";
 import AdminUpdate from "./components/AdminUpdate";
+import socket from "./socket/socket";
 
 
 function App(){
@@ -22,7 +23,21 @@ function App(){
    const dispatch = useDispatch();
    useEffect(()=>{
     dispatch(check());
-   },[dispatch]);    
+   },[dispatch]);
+   
+   useEffect(() => {
+
+    if (isAuthenticated && user) {
+
+        socket.emit(
+            "join-user-room",
+            user._id
+        );
+
+    }
+
+}, [isAuthenticated, user]);
+
    if (loading) {
     return <Loader/>;
   }                                 // it will render only once

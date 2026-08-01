@@ -1,29 +1,25 @@
 const problem = require("../models/problem");
 const Submission = require("../models/submission");
 const Problem = require("../models/problem")
-const {getlanguagebyId,submitBatch,submitToken, submitHiddenCode} = require("../utils/problemUtility");
+const {getlanguagebyId,submitBatch,submitToken, submitHiddenCode, submitVisibleCode} = require("../utils/problemUtility");
+const executionQueue = require("../queue/executionQueue");
+const { default: axiosClient } = require("../../../Frontend/src/utils/axiosClient");
 
 const submitCode =async(req,res)=>{
     try{
-        //console.log("heelooo")
+        
         const userId = req.result._id;
         const problemId = req.params.id;
-
         const {code,language} = req.body;
 
-        if(!(code||userId||problemId||language)){
+        if(!code||!userId||!problemId||!language){
             
             res.status(404).send("Fields are Missing"); 
 
         }
 
         //fetch the problem from db
-       
-        
         const problem = await Problem.findById(problemId);
-        
-        
-
         //storing sumbitted code, before Sending to judge0
         const submittedCode = await Submission.create({
             userId,
@@ -33,102 +29,58 @@ const submitCode =async(req,res)=>{
             status : "pending",
             testCasesTotal : problem.hiddenTestcase.length
         })
-        //console.log(submittedCode)
+      
 
-        //now sending code to judge0
-        //  const languageId = getlanguagebyId(language);
-
-        const submission = problem.hiddenTestcase.map(({ input, output }) => ({
-            language,
-            code,
-            input,
-            output
-        }));
-
-        // const submitResult = await submitBatch(submission);
-        // const resultToken = submitResult.map((value) => value.token);
-        // const resultb = await submitToken(resultToken);
-        const result = await submitHiddenCode(submission);
-
-        
-        let runtime =0;
-        let status="accepted";
-        let errorMessage = null;
-        let testCasesPassed=0;
-        for(const test of result){
-            if(test.passed){
-                testCasesPassed++;
-                runtime+=test.runtime;
-                
-
-            }
-            else{
-               
-                    status="Wrong";
-                    errorMessage=test.error;
-                
+        await executionQueue.add("judgeSubmmission",
+            {
+            submissionId : submittedCode._id
+            },
+            {
+                attempts:3,
+                backoff:{
+                    type:"exponential",
+                    delay:1000
                 }
             }
+        )
         
-
-        submittedCode.runtime=runtime;
-        submittedCode.memory=0;
-        submittedCode.status=status;
-        submittedCode.errorMessage=errorMessage;
-        submittedCode.testCasesPassed=testCasesPassed;
-        
-        //req.result means userSchmea because when authentication(tokenMw) result stored the refernce of document i.e userSchema(indirectly)
-        if(!req.result?.probelmSolved?.includes(problemId)){
-            req.result?.probelmSolved?.push(problemId);
-            await req.result.save();
-        }
-        await submittedCode.save();
-        res.status(200).send(submittedCode);
-
+        res.json({
+            success:true,
+            submissionId:submittedCode._id,
+            status="pending"
+        })
     }catch(err){
         console.log(err);
         res.status(404).send("Intenal Server Error"+err);
     }
+
+   
 }
 
-const runCode = async(req,res)=>{
-    try{
-        const userId = req.result._id;
-        const problemId = req.params.id;
 
-        const {code,language} = req.body;
+const runCode = async (req, res) => {
+  try {
+    const { testCaseArray } = req.body;
 
-        if(!(code||userId||problemId||language)){
-            res.status(404).send("Fields are Missing"); 
+    const allVisibleResult =
+      await submitVisibleCode(testCaseArray);
 
-        }
+    res.json({
+      success: true,
+      results: allVisibleResult
+    });
 
-        //fetch the problem from db
-        const problem = await Problem.findById(problemId);
-        
+  } catch (error) {
+    console.log("Error in runCode:", error);
 
-        
-        //now sending code to judge0
-         const languageId = getlanguagebyId(language);
+    res.status(500).json({
+      success: false,
+      message: "Error occurred"
+    });
+  }
+};
 
-        const submission = problem.visibleTestCase.map(({ input, output }) => ({
-            source_code:code,
-            language_id: languageId,
-            stdin: input,
-            expected_output: output
-        }));
 
-        const submitResult = await submitBatch(submission);
-        const resultToken = submitResult.map((value) => value.token);
-        const resultb = await submitToken(resultToken);
-        
-       res.status(200).send(resultb);
-    }catch(err){
-
-        res.status(404).send("Intenal Server Error"+err);
-    }
-    
-}
 
 const submitHistory = async(req,res)=>{
     try{
@@ -156,7 +108,22 @@ const submitHistory = async(req,res)=>{
 
     }
 }
-module.exports={submitCode,runCode,submitHistory};
+
+
+const checkSubmission = async(req,res)=>{
+   try{
+        const respond= await Submission.findById(req.params.id);
+        res.status(200).send(respond);
+   }catch(err){
+        res.status(500).send("Error Occured",err);
+   }
+}
+
+
+
+
+
+module.exports={submitCode,runCode,submitHistory,checkSubmission};
 
 
 
@@ -244,3 +211,44 @@ module.exports={submitCode,runCode,submitHistory};
 //         res.status(404).send("Intenal Server Error"+err);
 //     }
 // }
+
+
+
+
+
+
+
+        // const result = await submitHiddenCode(submission);
+        // let runtime =0;
+        // let status="accepted";
+        // let errorMessage = null;
+        // let testCasesPassed=0;
+        // for(const test of result){
+        //     if(test.passed){
+        //         testCasesPassed++;
+        //         runtime+=test.runtime;
+                
+
+        //     }
+        //     else{
+               
+        //             status="Wrong";
+        //             errorMessage=test.error;
+                
+        //         }
+        //     }
+        
+
+        // submittedCode.runtime=runtime;
+        // submittedCode.memory=0;
+        // submittedCode.status=status;
+        // submittedCode.errorMessage=errorMessage;
+        // submittedCode.testCasesPassed=testCasesPassed;
+        
+        // //req.result means userSchmea because when authentication(tokenMw) result stored the refernce of document i.e userSchema(indirectly)
+        // if(!req.result?.probelmSolved?.includes(problemId)){
+        //     req.result?.probelmSolved?.push(problemId);
+        //     await req.result.save();
+        // }
+        // await submittedCode.save();
+        // res.status(200).send(submittedCode);
