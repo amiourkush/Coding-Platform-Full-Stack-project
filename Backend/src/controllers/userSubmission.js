@@ -5,58 +5,69 @@ const {getlanguagebyId,submitBatch,submitToken, submitHiddenCode, submitVisibleC
 const executionQueue = require("../queue/executionQueue");
 const { default: axiosClient } = require("../../../Frontend/src/utils/axiosClient");
 
-const submitCode =async(req,res)=>{
-    try{
-        
+const submitCode = async (req, res) => {
+    try {
         const userId = req.result._id;
         const problemId = req.params.id;
-        const {code,language} = req.body;
+        const { code, language } = req.body;
 
-        if(!code||!userId||!problemId||!language){
-            
-            res.status(404).send("Fields are Missing"); 
-
+        if (!code || !userId || !problemId || !language) {
+            return res.status(400).json({
+                success: false,
+                message: "Fields are Missing"
+            });
         }
 
-        //fetch the problem from db
+        // Fetch problem
         const problem = await Problem.findById(problemId);
-        //storing sumbitted code, before Sending to judge0
+
+        if (!problem) {
+            return res.status(404).json({
+                success: false,
+                message: "Problem not found"
+            });
+        }
+
+        // Create submission before sending it to worker
         const submittedCode = await Submission.create({
             userId,
             problemId,
             code,
             language,
-            status : "pending",
-            testCasesTotal : problem.hiddenTestcase.length
-        })
-      
+            status: "pending",
+            testCasesTotal: problem.hiddenTestcase.length
+        });
 
-        await executionQueue.add("judgeSubmmission",
+        // Add submission to BullMQ
+        await executionQueue.add(
+            "judgeSubmission",
             {
-            submissionId : submittedCode._id
+                submissionId: submittedCode._id
             },
             {
-                attempts:3,
-                backoff:{
-                    type:"exponential",
-                    delay:1000
+                attempts: 3,
+                backoff: {
+                    type: "exponential",
+                    delay: 1000
                 }
             }
-        )
-        
-        res.json({
-            success:true,
-            submissionId:submittedCode._id,
-            status="pending"
-        })
-    }catch(err){
+        );
+
+        return res.status(202).json({
+            success: true,
+            submissionId: submittedCode._id,
+            status: "pending"
+        });
+
+    } catch (err) {
         console.log(err);
-        res.status(404).send("Intenal Server Error"+err);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
     }
-
-   
 }
-
 
 const runCode = async (req, res) => {
   try {

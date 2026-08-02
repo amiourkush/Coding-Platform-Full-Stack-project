@@ -12,7 +12,6 @@ const aiRouter = require("./routes/aiChatting");
 const cors = require("cors");
 const videoRouter = require("./routes/video");
 const codeRouter = require("./routes/codeSave");
-require("./socket/redisSubscriber");
 const app = express();
 
 app.use(cors({

@@ -69,31 +69,74 @@ function ProblemPage() {
 
   useEffect(() => {
 
-  socket.on("submission-update", async (data) => {
+    const handleSubmissionUpdate = async (data) => {
 
-    console.log("Socket Data:", data);
+      console.log("Socket Data:", data);
 
-    // Ignore updates for other submissions
-    if (data.problemId !== id) return;
+      // Ignore updates belonging to another problem
+      if (data.problemId !== id) {
+        return;
+      }
 
-    if (data.status === "pending" || data.status === "running") {
-      setLoading(true);
-      return;
-    }
+      if (
+        data.status === "pending" ||
+        data.status === "running"
+      ) {
 
-    const sub = await axiosClient.get(`/submission/submitHistory/${id}`);
+        setLoading(true);
+        setBottomTab("result");
 
-    setSubmissions(sub.data.submitHistory);
-    setSubmitResult(data);
-    setLoading(false);
+        return;
+      }
 
-  });
+      try {
 
-  return () => {
-    socket.off("submission-update");
-  };
+        // Final result arrived
+        setSubmitResult(data);
 
-}, [id]);
+        setLoading(false);
+
+        setBottomTab("result");
+
+        // Refresh submission history
+        const sub =
+          await axiosClient.get(
+            `/submission/submitHistory/${id}`
+          );
+
+        setSubmissions(
+          sub?.data?.submitHistory || []
+        );
+
+      }
+      catch (err) {
+
+        console.error(
+          "Failed to refresh submissions:",
+          err
+        );
+
+        setLoading(false);
+      }
+    };
+
+
+    socket.on(
+      "submission-updates",
+      handleSubmissionUpdate
+    );
+
+
+    return () => {
+
+      socket.off(
+        "submission-updates",
+        handleSubmissionUpdate
+      );
+
+    };
+
+  }, [id]);
 
   // 
   const runCode = async () => {
@@ -128,36 +171,62 @@ function ProblemPage() {
   // SUBMIT
   const submitCode = async () => {
 
-  setActionType("submit");
-  setLoading(true);
-  setSubmitResult(null);
+    setActionType("submit");
 
-  try {
+    setLoading(true);
 
-    await axiosClient.post(`/submission/submit/${id}`, {
-      code,
-      language
-    });
-    
-    socket.emit(
-    "join-submission-room",
-    res.data.submissionId
-);
+    setSubmitResult(null);
 
-  } catch (err) {
+    setBottomTab("result");
 
-    console.log(err);
+    try {
 
-    setSubmitResult({
-      status: "Error"
-    });
+      const res =
+        await axiosClient.post(
+          `/submission/submit/${id}`,
+          {
+            code,
+            language
+          }
+        );
 
-    setLoading(false);
+      console.log(
+        "Submission queued:",
+        res.data
+      );
 
-  }
+      // Do NOT set loading false here.
+      //
+      // Worker is processing asynchronously.
+      // Socket.IO will send:
+      //
+      // running
+      // accepted / wrong / failed
+      //
+      // Final socket event will set loading false.
 
-};
-  
+    }
+    catch (err) {
+
+      console.error(
+        "Submit error:",
+        err
+      );
+
+      setSubmitResult({
+        status: "error",
+        error:
+          err.response?.data?.message ||
+          err.message
+      });
+
+      setLoading(false);
+
+      setBottomTab("result");
+    }
+
+  };
+
 
   const changeLanguage = (lang) => {
     setLanguage(lang);
@@ -173,25 +242,28 @@ function ProblemPage() {
   );
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case "Accepted":
+
+    switch (status?.toLowerCase()) {
+
+      case "accepted":
         return "bg-green-500/20 text-green-400";
 
-      case "Wrong Answer":
+      case "wrong":
         return "bg-red-500/20 text-red-400";
 
-      case "Time Limit Exceeded":
+      case "failed":
+        return "bg-red-500/20 text-red-400";
+
+      case "pending":
         return "bg-yellow-500/20 text-yellow-400";
 
-      case "Runtime Error":
-        return "bg-orange-500/20 text-orange-400";
-
-      case "Compilation Error":
-        return "bg-purple-500/20 text-purple-400";
+      case "running":
+        return "bg-blue-500/20 text-blue-400";
 
       default:
         return "bg-zinc-700 text-zinc-300";
     }
+
   };
 
   const testcase =
@@ -595,8 +667,8 @@ function ProblemPage() {
                 <button
                   onClick={() => setBottomTab("testcase")}
                   className={`px-4 py-3 text-sm font-medium transition ${bottomTab === "testcase"
-                      ? "text-white border-b-2 border-white"
-                      : "text-zinc-500"
+                    ? "text-white border-b-2 border-white"
+                    : "text-zinc-500"
                     }`}
                 >
                   Testcase
@@ -605,8 +677,8 @@ function ProblemPage() {
                 <button
                   onClick={() => setBottomTab("result")}
                   className={`px-4 py-3 text-sm font-medium transition ${bottomTab === "result"
-                      ? "text-white border-b-2 border-white"
-                      : "text-zinc-500"
+                    ? "text-white border-b-2 border-white"
+                    : "text-zinc-500"
                     }`}
                 >
                   Result
@@ -629,8 +701,8 @@ function ProblemPage() {
                           key={i}
                           onClick={() => setSelectedTestcase(i)}
                           className={`px-4 py-2 rounded-xl text-sm transition ${selectedTestcase === i
-                              ? "bg-white text-black"
-                              : "bg-zinc-900 text-zinc-400 hover:text-white"
+                            ? "bg-white text-black"
+                            : "bg-zinc-900 text-zinc-400 hover:text-white"
                             }`}
                         >
                           Example {i + 1}
@@ -717,12 +789,18 @@ function ProblemPage() {
                         <div className="flex justify-between items-center">
 
                           <h2
-                            className={`font-semibold text-lg ${submitResult.status === "Accepted"
-                                ? "text-green-400"
-                                : "text-red-400"
+                            className={`font-semibold text-lg ${submitResult.status?.toLowerCase() === "accepted"
+                              ? "text-green-400"
+                              : "text-red-400"
                               }`}
                           >
-                            {submitResult.status}
+                            {submitResult.status === "accepted"
+                              ? "Accepted"
+                              : submitResult.status === "wrong"
+                                ? "Wrong Answer"
+                                : submitResult.status === "failed"
+                                  ? "Failed"
+                                  : submitResult.status}
                           </h2>
 
                           <span className="text-zinc-400">
@@ -740,14 +818,14 @@ function ProblemPage() {
 
                         <div
                           className={`rounded-xl border p-4 ${current.passed
-                              ? "border-green-500/20 bg-green-500/5"
-                              : "border-red-500/20 bg-red-500/5"
+                            ? "border-green-500/20 bg-green-500/5"
+                            : "border-red-500/20 bg-red-500/5"
                             }`}
                         >
                           <p
                             className={`font-medium ${current.passed
-                                ? "text-green-400"
-                                : "text-red-400"
+                              ? "text-green-400"
+                              : "text-red-400"
                               }`}
                           >
                             {current.passed

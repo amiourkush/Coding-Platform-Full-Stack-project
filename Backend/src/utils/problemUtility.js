@@ -28,25 +28,76 @@ const executeCode = async (executor, { language, code, input }) => {
  
 };
 
-const submitVisibleCode =async(submission)=>{
+const submitVisibleCode = async (submission) => {
 
-  
-  const allVisibleResult =[]
-  for(const data of submission){
-    const result = await executeCode(data);
-    if(data?.output.trim()!=result?.output.trim()){
-      allVisibleResult.passed =true;
-      allVisibleResult.push(result);
-         
+    const allVisibleResult = [];
+
+    if (!submission || submission.length === 0) {
+        throw new Error("No visible testcases provided");
     }
-    else{
-      allVisibleResult.passed = false;
-      allVisibleResult.push(result);
+
+
+    // No historical runtime prediction for Run requests.
+    // Therefore scheduler treats this as UNKNOWN workload.
+    const {
+        executor,
+        estimatedRuntime,
+        hasReliableEstimate
+    } = loadBalancer.getExecutor(null);
+
+
+    console.log(
+        `[RUN]
+Executor=${executor.id}
+ReliableEstimate=${hasReliableEstimate}`
+    );
+
+
+    try {
+
+        for (const data of submission) {
+
+            const result =
+                await executeCode(
+                    executor,
+                    data
+                );
+
+
+            if (
+                result?.output?.trim() ===
+                data?.output?.trim()
+            ) {
+
+                result.passed = true;
+
+            }
+
+            else {
+
+                result.passed = false;
+
+            }
+
+
+            allVisibleResult.push(result);
+        }
+
+
+        return allVisibleResult;
+
     }
-    
-  }
-  return allVisibleResult;
-}
+
+    finally {
+
+        loadBalancer.releaseExecutor(
+            executor.id,
+            estimatedRuntime,
+            hasReliableEstimate
+        );
+
+    }
+};
 
 
 const submitHiddenCode =
