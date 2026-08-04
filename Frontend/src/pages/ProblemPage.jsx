@@ -139,35 +139,77 @@ function ProblemPage() {
   }, [id]);
 
   // 
-  const runCode = async () => {
-    setActionType("run");
+ const runCode = async () => {
 
-    setLoading(true);
-    setResults([]);
+  if (!problem) return;
+
+  setActionType("run");
+
+  setLoading(true);
+
+  setResults([]);
+
+  setBottomTab("result");
 
 
-    const testCaseArray = problem.visibleTestcase.map(tc =>
-    ({
-      language: language === "c++" ? "c++" : language,
+  // Build visible testcase array
+  const testCaseArray =
+    problem.visibleTestcase.map((tc) => ({
+      language,
       code,
-      input: tc.input
-    })
-    );
-    try {
-      const response = await axiosClient.post(
-        "/submit/run",
-        { testCaseArray }
+      input: tc.input,
+
+      // IMPORTANT
+      output: tc.output
+    }));
+
+
+  console.log(
+    "Sending Run Testcases:",
+    testCaseArray
+  );
+
+
+  try {
+
+    const response =
+      await axiosClient.post(
+        "/submission/run",
+        {
+          testCaseArray
+        }
       );
 
-      setResults(response.data.results);
 
-    } catch (err) {
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    console.log(
+      "Run Response:",
+      response.data
+    );
 
+
+    setResults(
+      response.data.results || []
+    );
+
+  }
+  catch (err) {
+
+    console.error(
+      "Run Code Error:",
+      err
+    );
+
+
+    setResults([]);
+
+  }
+  finally {
+
+    setLoading(false);
+
+  }
+
+};
   // SUBMIT
   const submitCode = async () => {
 

@@ -6,7 +6,7 @@ const runLimiter = require("../middleware/runLimiter");
 const submitLimiter = require("../middleware/submitLimiter");
 
 submitRouter.post("/submit/:id",tokenMw,submitLimiter,submitCode);
- submitRouter.post("/run",tokenMw,runLimiter,runCode);
+submitRouter.post("/run",tokenMw,runLimiter,runCode);
 submitRouter.get("/submitHistory/:id",tokenMw,submitHistory);
 submitRouter.get("/checkSubmission/:id",tokenMw,checkSubmission);
 
