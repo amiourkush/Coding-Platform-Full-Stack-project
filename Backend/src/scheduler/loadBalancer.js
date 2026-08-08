@@ -1,4 +1,4 @@
-const executorRegistry =require("./executorRegistry");
+const executorRegistry = require("./executorRegistry");
 
 
 // Minimum historical executions before
@@ -6,67 +6,148 @@ const executorRegistry =require("./executorRegistry");
 const MIN_HISTORY = 3;
 
 
-// Temporary estimated cost of a job
-// when we don't know its runtime.
-//
-// Later we'll replace this with
-// historical global/language averages.
+// Cost assigned to a job whose runtime
+// is currently unknown
 const DEFAULT_UNKNOWN_COST = 1000;
+
+
+// Read scheduler mode from .env
+//
+// Possible values:
+//
+// ROUND_ROBIN
+// LEAST_CONNECTIONS
+// WORKLOAD_AWARE
+//
+const SCHEDULER_MODE =
+    (process.env.SCHEDULER_MODE ||
+        "WORKLOAD_AWARE").toUpperCase();
 
 
 class LoadBalancer {
 
+    constructor() {
 
-    // ---------------------------------
-    // Calculate current executor score
-    // ---------------------------------
+        // Used only by Round Robin
+        this.currentIndex = 0;
+
+    }
+
+
+    // =====================================================
+    // COMMON SCORE
+    // =====================================================
 
     calculateScore(executor) {
 
         return (
             executor.estimatedLoad +
-            executor.unknownJobs * DEFAULT_UNKNOWN_COST
+            executor.unknownJobs *
+            DEFAULT_UNKNOWN_COST
         );
+
     }
 
 
-    // ---------------------------------
-    // Choose executor
-    // ---------------------------------
+    // =====================================================
+    // 1. ROUND ROBIN
+    // =====================================================
 
-    getExecutor(runtimeStats) {
+    getRoundRobinExecutor(executors) {
 
-        const executors =
-            executorRegistry.getHealthyExecutors();
+        const executor =
+            executors[
+                this.currentIndex %
+                executors.length
+            ];
+
+        this.currentIndex++;
+
+        return executor;
+
+    }
 
 
-        if (executors.length === 0) {
+    // =====================================================
+    // 2. LEAST CONNECTIONS
+    // =====================================================
 
-            throw new Error(
-                "No healthy executors available"
-            );
+    getLeastConnectionsExecutor(executors) {
+
+        let selectedExecutor =
+            executors[0];
+
+
+        for (
+            let i = 1;
+            i < executors.length;
+            i++
+        ) {
+
+            const executor =
+                executors[i];
+
+
+            // Primary criterion:
+            // number of active submissions
+            if (
+                executor.activeJobs <
+                selectedExecutor.activeJobs
+            ) {
+
+                selectedExecutor =
+                    executor;
+
+            }
+
+
+            // Tie breaker:
+            // use estimated workload
+            else if (
+                executor.activeJobs ===
+                selectedExecutor.activeJobs
+            ) {
+
+                const currentScore =
+                    this.calculateScore(
+                        selectedExecutor
+                    );
+
+                const newScore =
+                    this.calculateScore(
+                        executor
+                    );
+
+
+                if (
+                    newScore <
+                    currentScore
+                ) {
+
+                    selectedExecutor =
+                        executor;
+
+                }
+
+            }
+
         }
 
 
-        // Can we trust historical runtime?
+        return selectedExecutor;
 
-        const hasReliableEstimate =
-            runtimeStats &&
-            runtimeStats.executionCount >= MIN_HISTORY &&
-            runtimeStats.estimatedRuntime > 0;
+    }
 
 
-        const estimatedRuntime =
-            hasReliableEstimate
-                ? runtimeStats.estimatedRuntime
-                : 0;
+    // =====================================================
+    // 3. WORKLOAD AWARE
+    // =====================================================
 
+    getWorkloadAwareExecutor(executors) {
 
-        // ---------------------------------
-        // Find executor with minimum score
-        // ---------------------------------
+        let selectedExecutor =
+            executors[0];
 
-        let selectedExecutor = executors[0];
 
         let minimumScore =
             this.calculateScore(
@@ -83,106 +164,246 @@ class LoadBalancer {
             const executor =
                 executors[i];
 
+
             const score =
-                this.calculateScore(executor);
+                this.calculateScore(
+                    executor
+                );
 
 
-            // Lower workload score wins
+            // Lower predicted workload wins
+            if (
+                score <
+                minimumScore
+            ) {
 
-            if (score < minimumScore) {
+                selectedExecutor =
+                    executor;
 
-                selectedExecutor = executor;
-                minimumScore = score;
+                minimumScore =
+                    score;
 
             }
 
-            // ---------------------------------
-            // Tie breaker
-            //
-            // If scores are equal,
-            // choose fewer active jobs.
-            // ---------------------------------
 
+            // Tie breaker:
+            // fewer active jobs
             else if (
-                score === minimumScore &&
+                score ===
+                minimumScore &&
                 executor.activeJobs <
                 selectedExecutor.activeJobs
             ) {
 
-                selectedExecutor = executor;
-                minimumScore = score;
+                selectedExecutor =
+                    executor;
 
             }
+
         }
 
 
-        // ---------------------------------
-        // Reserve executor capacity
-        // ---------------------------------
+        return selectedExecutor;
 
-        executorRegistry.incrementActiveJobs(
-            selectedExecutor.id
-        );
+    }
 
 
-        if (hasReliableEstimate) {
+    // =====================================================
+    // MAIN SCHEDULER
+    // =====================================================
 
-            // Known workload
+    getExecutor(runtimeStats) {
 
-            executorRegistry.addEstimatedLoad(
-                selectedExecutor.id,
-                estimatedRuntime
+        const executors =
+            executorRegistry
+                .getHealthyExecutors();
+
+
+        if (
+            executors.length === 0
+        ) {
+
+            throw new Error(
+                "No healthy executors available"
             );
+
+        }
+
+
+        // -------------------------------------------------
+        // Determine whether we have reliable history
+        // -------------------------------------------------
+
+        const hasReliableEstimate =
+            runtimeStats &&
+            runtimeStats.executionCount >=
+                MIN_HISTORY &&
+            runtimeStats.estimatedRuntime > 0;
+
+
+        const estimatedRuntime =
+            hasReliableEstimate
+                ? runtimeStats.estimatedRuntime
+                : 0;
+
+
+        // -------------------------------------------------
+        // Choose executor
+        // -------------------------------------------------
+
+        let selectedExecutor;
+
+
+        if (
+            SCHEDULER_MODE ===
+            "ROUND_ROBIN"
+        ) {
+
+            selectedExecutor =
+                this.getRoundRobinExecutor(
+                    executors
+                );
+
+        }
+
+
+        else if (
+            SCHEDULER_MODE ===
+            "LEAST_CONNECTIONS"
+        ) {
+
+            selectedExecutor =
+                this.getLeastConnectionsExecutor(
+                    executors
+                );
+
+        }
+
+
+        else if (
+            SCHEDULER_MODE ===
+            "WORKLOAD_AWARE"
+        ) {
+
+            selectedExecutor =
+                this.getWorkloadAwareExecutor(
+                    executors
+                );
+
+        }
+
+
+        else {
+
+            throw new Error(
+                `Invalid SCHEDULER_MODE: ${SCHEDULER_MODE}`
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // Reserve executor
+        // -------------------------------------------------
+
+        executorRegistry
+            .incrementActiveJobs(
+                selectedExecutor.id
+            );
+
+
+        if (
+            hasReliableEstimate
+        ) {
+
+            executorRegistry
+                .addEstimatedLoad(
+                    selectedExecutor.id,
+                    estimatedRuntime
+                );
 
         }
 
         else {
 
-            // Unknown workload
+            executorRegistry
+                .incrementUnknownJobs(
+                    selectedExecutor.id
+                );
 
-            executorRegistry.incrementUnknownJobs(
-                selectedExecutor.id
-            );
         }
 
 
-        const newScore =
+        // -------------------------------------------------
+        // Calculate score after reservation
+        // -------------------------------------------------
+
+        const scoreAfter =
             this.calculateScore(
                 selectedExecutor
             );
 
 
+        // -------------------------------------------------
+        // Logging
+        // -------------------------------------------------
+
         console.log(
-            `[Scheduler]
-Strategy=${hasReliableEstimate ? "WORKLOAD_AWARE" : "UNKNOWN_WORKLOAD"}
+`
+[Scheduler]
+
+Mode=${SCHEDULER_MODE}
+
+Strategy=${
+    SCHEDULER_MODE ===
+    "WORKLOAD_AWARE"
+        ? (
+            hasReliableEstimate
+                ? "WORKLOAD_AWARE"
+                : "UNKNOWN_WORKLOAD"
+          )
+        : SCHEDULER_MODE
+}
+
 Executor=${selectedExecutor.id}
-ScoreBefore=${minimumScore}
-ScoreAfter=${newScore}
+
 ActiveJobs=${selectedExecutor.activeJobs}
+
 EstimatedLoad=${selectedExecutor.estimatedLoad}
+
 UnknownJobs=${selectedExecutor.unknownJobs}
-JobEstimate=${estimatedRuntime}ms`
+
+ScoreAfter=${scoreAfter}
+
+JobEstimate=${estimatedRuntime}ms
+
+ReliableEstimate=${hasReliableEstimate}
+`
         );
 
 
-        // IMPORTANT:
-        // return everything required later
-        // to release the exact reservation.
+        // -------------------------------------------------
+        // IMPORTANT
+        // Worker already expects this structure
+        // -------------------------------------------------
 
         return {
 
-            executor: selectedExecutor,
+            executor:
+                selectedExecutor,
 
             estimatedRuntime,
 
             hasReliableEstimate
+
         };
+
     }
 
 
-    // ---------------------------------
-    // Submission finished
-    // ---------------------------------
+    // =====================================================
+    // RELEASE EXECUTOR
+    // =====================================================
 
     releaseExecutor(
         executorId,
@@ -190,39 +411,48 @@ JobEstimate=${estimatedRuntime}ms`
         hasReliableEstimate
     ) {
 
-        executorRegistry.decrementActiveJobs(
-            executorId
-        );
-
-
-        if (hasReliableEstimate) {
-
-            executorRegistry.removeEstimatedLoad(
-                executorId,
-                estimatedRuntime
+        executorRegistry
+            .decrementActiveJobs(
+                executorId
             );
+
+
+        if (
+            hasReliableEstimate
+        ) {
+
+            executorRegistry
+                .removeEstimatedLoad(
+                    executorId,
+                    estimatedRuntime
+                );
 
         }
 
         else {
 
-            executorRegistry.decrementUnknownJobs(
-                executorId
-            );
+            executorRegistry
+                .decrementUnknownJobs(
+                    executorId
+                );
+
         }
 
 
-        executorRegistry.incrementCompletedJobs(
-            executorId
-        );
+        executorRegistry
+            .incrementCompletedJobs(
+                executorId
+            );
 
 
         console.log(
             `[Scheduler] ${executorId} released`
         );
+
     }
 
 }
 
 
-module.exports = new LoadBalancer();
+module.exports =
+    new LoadBalancer();
