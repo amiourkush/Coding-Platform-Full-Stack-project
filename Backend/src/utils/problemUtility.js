@@ -100,24 +100,11 @@ ReliableEstimate=${hasReliableEstimate}`
 };
 
 
-const submitHiddenCode =
-async (submission, problem) => {
-
-    const allResult = [];
-
-    // Safety check
-    if (!submission || submission.length === 0) {
-        throw new Error("No testcases provided");
-    }
-
-    const language =
-        submission[0].language;
-
-
-    // ------------------------------------
-    // Find historical runtime stats
-    // for this problem + language
-    // ------------------------------------
+const submitHiddenCode = async (
+    { code, language },
+    testcases,
+    problem
+) => {
 
     const runtimeStats =
         problem.runtimeStats?.find(
@@ -125,12 +112,6 @@ async (submission, problem) => {
                 stat.language.toLowerCase() ===
                 language.toLowerCase()
         );
-
-
-    // ------------------------------------
-    // Workload-aware scheduler
-    // chooses ONE executor
-    // ------------------------------------
 
     const {
         executor,
@@ -140,66 +121,23 @@ async (submission, problem) => {
         runtimeStats
     );
 
-
-    console.log(
-        `Problem=${problem._id}
-Language=${language}
-Executor=${executor.id}
-EstimatedRuntime=${estimatedRuntime}ms
-ReliableEstimate=${hasReliableEstimate}`
-    );
-
-
     try {
 
-        // ------------------------------------
-        // ALL testcases of this submission
-        // execute on SAME executor
-        // ------------------------------------
-
-        for (const data of submission) {
-
-            const result =
-                await executeCode(
-                    executor,
-                    data
-                );
-
-
-            if (
-                result?.output?.trim() ===
-                data.output.trim()
-            ) {
-
-                result.passed = true;
-
-                allResult.push(result);
-
+        const response = await axios.post(
+            `${executor.url}/run-batch`,
+            {
+                language,
+                code,
+                testcases
+            },
+            {
+                timeout: 120000
             }
+        );
 
-            else {
+        return response.data;
 
-                result.passed = false;
-
-                allResult.push(result);
-
-                break;
-
-            }
-
-        }
-
-
-        return allResult;
-
-    }
-
-    finally {
-
-        // ------------------------------------
-        // Remove this submission's reserved
-        // workload from executor
-        // ------------------------------------
+    } finally {
 
         loadBalancer.releaseExecutor(
             executor.id,
@@ -208,9 +146,7 @@ ReliableEstimate=${hasReliableEstimate}`
         );
 
     }
-
 };
-
 
 
 

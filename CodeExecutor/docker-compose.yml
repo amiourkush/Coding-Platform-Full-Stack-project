@@ -1,0 +1,32 @@
+services:
+  executor1:
+    image: executor-service
+    container_name: executor1
+    environment:
+      EXECUTOR_NAME: executor1
+    ports:
+      - "4001:4000"
+
+  executor2:
+    image: executor-service
+    container_name: executor2
+    environment:
+      EXECUTOR_NAME: executor2
+    ports:
+      - "4002:4000"
+
+  executor3:
+    image: executor-service
+    container_name: executor3
+    environment:
+      EXECUTOR_NAME: executor3
+    ports:
+      - "4003:4000"
+
+  executor4:
+    image: executor-service
+    container_name: executor4
+    environment:
+      EXECUTOR_NAME: executor4
+    ports:
+      - "4004:4000"

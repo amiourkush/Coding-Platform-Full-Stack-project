@@ -18,27 +18,29 @@ const submitCode = async (req, res) => {
             });
         }
 
-        // Fetch problem
-        const problem = await Problem.findById(problemId);
+        // Only verify that the problem exists.
+        // Do NOT load hidden testcases here.
+        const problemExists = await Problem.exists({
+            _id: problemId
+        });
 
-        if (!problem) {
+        if (!problemExists) {
             return res.status(404).json({
                 success: false,
                 message: "Problem not found"
             });
         }
 
-        // Create submission before sending it to worker
+        // Worker will fill the actual testcase count.
         const submittedCode = await Submission.create({
             userId,
             problemId,
             code,
             language,
             status: "pending",
-            testCasesTotal: problem.hiddenTestcase.length
+            testCasesTotal: 0
         });
 
-        // Add submission to BullMQ
         await executionQueue.add(
             "judgeSubmission",
             {
@@ -60,14 +62,14 @@ const submitCode = async (req, res) => {
         });
 
     } catch (err) {
-        console.log(err);
+        console.error("submitCode:", err);
 
         return res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
     }
-}
+};
 
 const runCode = async (req, res) => {
   try {
