@@ -20,10 +20,9 @@ const createProblem = async (req, res) => {
         }));
 
         const result = await submitVisibleCode(submission);
-        const filtered = result.find(f=>f.passed==false);
-        if(filtered.length>0){
-            return res.send(result);
-        }
+        if (result.some(f => f.passed === false)) {
+    return res.status(400).send(result);
+}
  }
 
     const userProblem = await Problem.create({ ...req.body, problemCreator: req.result._id })
